@@ -160,12 +160,27 @@ const CreerCours = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Vérifier qu'un établissement est sélectionné via la matière
+    if (!matiereId) {
+      toast.error("Veuillez sélectionner une matière");
+      return;
+    }
+
+    // Récupérer l'établissement de la matière sélectionnée
+    const selectedMatiere = matieres.find(m => m.id === matiereId);
+    const etablissement = selectedMatiere?.etablissement_id;
+
+    if (!etablissement) {
+      toast.error("Impossible de déterminer l'établissement");
+      return;
+    }
+
     // Validation
     const validation = coursSchema.safeParse({
       titre,
       description,
       matiere_id: matiereId,
-      etablissement_id: etablissementId,
+      etablissement_id: etablissement,
       classes: selectedClasses,
       visio_url: visioUrl,
     });
@@ -183,7 +198,7 @@ const CreerCours = () => {
         titre,
         description,
         matiere_id: matiereId,
-        etablissement_id: etablissementId,
+        etablissement_id: etablissement,
         contenu_json: blocs,
         objectifs: objectifs.filter(o => o.trim()),
         prerequis: prerequis.filter(p => p.trim()),
