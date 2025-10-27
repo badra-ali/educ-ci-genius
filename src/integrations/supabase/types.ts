@@ -14,6 +14,77 @@ export type Database = {
   }
   public: {
     Tables: {
+      attachments: {
+        Row: {
+          cours_id: string | null
+          created_at: string | null
+          devoir_id: string | null
+          id: string
+          message_id: string | null
+          mime_type: string
+          name: string
+          rendu_id: string | null
+          size: number
+          uploaded_by: string | null
+          url: string
+        }
+        Insert: {
+          cours_id?: string | null
+          created_at?: string | null
+          devoir_id?: string | null
+          id?: string
+          message_id?: string | null
+          mime_type: string
+          name: string
+          rendu_id?: string | null
+          size: number
+          uploaded_by?: string | null
+          url: string
+        }
+        Update: {
+          cours_id?: string | null
+          created_at?: string | null
+          devoir_id?: string | null
+          id?: string
+          message_id?: string | null
+          mime_type?: string
+          name?: string
+          rendu_id?: string | null
+          size?: number
+          uploaded_by?: string | null
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attachments_cours_id_fkey"
+            columns: ["cours_id"]
+            isOneToOne: false
+            referencedRelation: "cours"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_devoir_id_fkey"
+            columns: ["devoir_id"]
+            isOneToOne: false
+            referencedRelation: "devoirs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attachments_rendu_id_fkey"
+            columns: ["rendu_id"]
+            isOneToOne: false
+            referencedRelation: "rendus_devoir"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -90,6 +161,159 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "classes_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cours: {
+        Row: {
+          contenu_json: Json | null
+          created_at: string | null
+          description: string | null
+          enseignant_id: string
+          etablissement_id: string
+          id: string
+          matiere_id: string
+          objectifs: string[] | null
+          prerequis: string[] | null
+          statut: string | null
+          titre: string
+          updated_at: string | null
+          visio_url: string | null
+        }
+        Insert: {
+          contenu_json?: Json | null
+          created_at?: string | null
+          description?: string | null
+          enseignant_id: string
+          etablissement_id: string
+          id?: string
+          matiere_id: string
+          objectifs?: string[] | null
+          prerequis?: string[] | null
+          statut?: string | null
+          titre: string
+          updated_at?: string | null
+          visio_url?: string | null
+        }
+        Update: {
+          contenu_json?: Json | null
+          created_at?: string | null
+          description?: string | null
+          enseignant_id?: string
+          etablissement_id?: string
+          id?: string
+          matiere_id?: string
+          objectifs?: string[] | null
+          prerequis?: string[] | null
+          statut?: string | null
+          titre?: string
+          updated_at?: string | null
+          visio_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cours_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cours_matiere_id_fkey"
+            columns: ["matiere_id"]
+            isOneToOne: false
+            referencedRelation: "matieres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cours_classes: {
+        Row: {
+          classe_id: string
+          cours_id: string
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          classe_id: string
+          cours_id: string
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          classe_id?: string
+          cours_id?: string
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cours_classes_classe_id_fkey"
+            columns: ["classe_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cours_classes_cours_id_fkey"
+            columns: ["cours_id"]
+            isOneToOne: false
+            referencedRelation: "cours"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      devoirs: {
+        Row: {
+          actif: boolean | null
+          consignes: string
+          cours_id: string
+          created_at: string | null
+          deadline: string
+          etablissement_id: string
+          id: string
+          note_sur: number | null
+          titre: string
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean | null
+          consignes: string
+          cours_id: string
+          created_at?: string | null
+          deadline: string
+          etablissement_id: string
+          id?: string
+          note_sur?: number | null
+          titre: string
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean | null
+          consignes?: string
+          cours_id?: string
+          created_at?: string | null
+          deadline?: string
+          etablissement_id?: string
+          id?: string
+          note_sur?: number | null
+          titre?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devoirs_cours_id_fkey"
+            columns: ["cours_id"]
+            isOneToOne: false
+            referencedRelation: "cours"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "devoirs_etablissement_id_fkey"
             columns: ["etablissement_id"]
             isOneToOne: false
             referencedRelation: "etablissements"
@@ -269,6 +493,41 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          author_id: string | null
+          contenu: string
+          created_at: string | null
+          id: string
+          thread_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          contenu: string
+          created_at?: string | null
+          id?: string
+          thread_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          contenu?: string
+          created_at?: string | null
+          id?: string
+          thread_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_eleves: {
         Row: {
           contact_prioritaire: boolean | null
@@ -331,6 +590,261 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      qcms: {
+        Row: {
+          affichage_feedback: string | null
+          cours_id: string | null
+          created_at: string | null
+          cree_par_id: string
+          description: string | null
+          duree_minutes: number | null
+          etablissement_id: string
+          id: string
+          melanger_options: boolean | null
+          melanger_questions: boolean | null
+          note_minimale: number | null
+          statut: string | null
+          tags: string[] | null
+          tentatives_max: number | null
+          titre: string
+          updated_at: string | null
+        }
+        Insert: {
+          affichage_feedback?: string | null
+          cours_id?: string | null
+          created_at?: string | null
+          cree_par_id: string
+          description?: string | null
+          duree_minutes?: number | null
+          etablissement_id: string
+          id?: string
+          melanger_options?: boolean | null
+          melanger_questions?: boolean | null
+          note_minimale?: number | null
+          statut?: string | null
+          tags?: string[] | null
+          tentatives_max?: number | null
+          titre: string
+          updated_at?: string | null
+        }
+        Update: {
+          affichage_feedback?: string | null
+          cours_id?: string | null
+          created_at?: string | null
+          cree_par_id?: string
+          description?: string | null
+          duree_minutes?: number | null
+          etablissement_id?: string
+          id?: string
+          melanger_options?: boolean | null
+          melanger_questions?: boolean | null
+          note_minimale?: number | null
+          statut?: string | null
+          tags?: string[] | null
+          tentatives_max?: number | null
+          titre?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "qcms_cours_id_fkey"
+            columns: ["cours_id"]
+            isOneToOne: false
+            referencedRelation: "cours"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "qcms_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      questions: {
+        Row: {
+          answer_index: number
+          created_at: string | null
+          feedback: string | null
+          id: string
+          options: Json
+          ordre: number
+          points: number | null
+          qcm_id: string
+          question: string
+        }
+        Insert: {
+          answer_index: number
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          options: Json
+          ordre: number
+          points?: number | null
+          qcm_id: string
+          question: string
+        }
+        Update: {
+          answer_index?: number
+          created_at?: string | null
+          feedback?: string | null
+          id?: string
+          options?: Json
+          ordre?: number
+          points?: number | null
+          qcm_id?: string
+          question?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_qcm_id_fkey"
+            columns: ["qcm_id"]
+            isOneToOne: false
+            referencedRelation: "qcms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rendus_devoir: {
+        Row: {
+          commentaire_prof: string | null
+          created_at: string | null
+          devoir_id: string
+          eleve_id: string
+          id: string
+          note: number | null
+          note_at: string | null
+          rendu_at: string | null
+          statut: string | null
+          texte: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          commentaire_prof?: string | null
+          created_at?: string | null
+          devoir_id: string
+          eleve_id: string
+          id?: string
+          note?: number | null
+          note_at?: string | null
+          rendu_at?: string | null
+          statut?: string | null
+          texte?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          commentaire_prof?: string | null
+          created_at?: string | null
+          devoir_id?: string
+          eleve_id?: string
+          id?: string
+          note?: number | null
+          note_at?: string | null
+          rendu_at?: string | null
+          statut?: string | null
+          texte?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rendus_devoir_devoir_id_fkey"
+            columns: ["devoir_id"]
+            isOneToOne: false
+            referencedRelation: "devoirs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tentatives_qcm: {
+        Row: {
+          duree_secondes: number | null
+          eleve_id: string
+          id: string
+          qcm_id: string
+          reponses: Json
+          score: number
+          started_at: string | null
+          submitted_at: string | null
+        }
+        Insert: {
+          duree_secondes?: number | null
+          eleve_id: string
+          id?: string
+          qcm_id: string
+          reponses: Json
+          score: number
+          started_at?: string | null
+          submitted_at?: string | null
+        }
+        Update: {
+          duree_secondes?: number | null
+          eleve_id?: string
+          id?: string
+          qcm_id?: string
+          reponses?: Json
+          score?: number
+          started_at?: string | null
+          submitted_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tentatives_qcm_qcm_id_fkey"
+            columns: ["qcm_id"]
+            isOneToOne: false
+            referencedRelation: "qcms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      threads: {
+        Row: {
+          cours_id: string | null
+          created_at: string | null
+          etablissement_id: string
+          id: string
+          participants: string[] | null
+          titre: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cours_id?: string | null
+          created_at?: string | null
+          etablissement_id: string
+          id?: string
+          participants?: string[] | null
+          titre?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cours_id?: string | null
+          created_at?: string | null
+          etablissement_id?: string
+          id?: string
+          participants?: string[] | null
+          titre?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "threads_cours_id_fkey"
+            columns: ["cours_id"]
+            isOneToOne: false
+            referencedRelation: "cours"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "threads_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
