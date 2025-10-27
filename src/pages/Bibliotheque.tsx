@@ -1,43 +1,34 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, BookOpen, Heart, Search, Volume2 } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
+import { useResources, useUserShelves, useAddToShelf } from "@/hooks/useResources";
+import { ResourceCard } from "@/components/library/ResourceCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Bibliotheque = () => {
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedLevel, setSelectedLevel] = useState<string>("Tous");
+  const [audioOnly, setAudioOnly] = useState(false);
 
-  const books = [
-    {
-      title: "Les Misérables",
-      author: "Victor Hugo",
-      level: "Lycée",
-      subject: "Français",
-      hasAudio: true,
-    },
-    {
-      title: "Cours de Mathématiques",
-      author: "Dr. Kouassi",
-      level: "Terminale",
-      subject: "Mathématiques",
-      hasAudio: false,
-    },
-    {
-      title: "Histoire de la Côte d'Ivoire",
-      author: "Prof. Yao",
-      level: "Collège",
-      subject: "Histoire",
-      hasAudio: true,
-    },
-    {
-      title: "Sciences Physiques",
-      author: "Dr. Traoré",
-      level: "2nde",
-      subject: "Physique",
-      hasAudio: true,
-    },
-  ];
+  const { data: resources, isLoading } = useResources({
+    query: searchQuery,
+    level: selectedLevel,
+    audioOnly,
+  });
+
+  const { data: shelves } = useUserShelves();
+  const addToShelf = useAddToShelf();
+
+  const favoriteIds = new Set(
+    shelves?.filter(s => s.shelf === 'FAVORI').map(s => s.resource_id) || []
+  );
+
+  const levels = ["Tous", "Primaire", "Collège", "Lycée"];
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,62 +56,67 @@ const Bibliotheque = () => {
             <Input
               placeholder="Rechercher un livre, un auteur, une matière..."
               className="pl-10 h-12"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
         </div>
 
         {/* Filters */}
         <div className="flex gap-2 mb-8 flex-wrap">
-          <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground">
-            Tous
-          </Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground">
-            Primaire
-          </Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground">
-            Collège
-          </Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground">
-            Lycée
-          </Badge>
-          <Badge variant="outline" className="cursor-pointer hover:bg-primary hover:text-primary-foreground">
+          {levels.map((level) => (
+            <Badge
+              key={level}
+              variant={selectedLevel === level ? "default" : "outline"}
+              className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+              onClick={() => setSelectedLevel(level)}
+            >
+              {level}
+            </Badge>
+          ))}
+          <Badge
+            variant={audioOnly ? "default" : "outline"}
+            className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+            onClick={() => setAudioOnly(!audioOnly)}
+          >
             Avec audio
           </Badge>
         </div>
 
-        {/* Books Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {books.map((book, index) => (
-            <Card key={index} className="hover:shadow-lg transition-all hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-full h-48 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center mb-4">
-                  <BookOpen className="w-16 h-16 text-primary" />
-                </div>
-                <CardTitle className="text-lg">{book.title}</CardTitle>
-                <CardDescription>{book.author}</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex gap-2 flex-wrap">
-                  <Badge variant="secondary">{book.level}</Badge>
-                  <Badge variant="outline">{book.subject}</Badge>
-                </div>
-                <div className="flex gap-2">
-                  <Button className="flex-1" size="sm">
-                    Lire
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Heart className="w-4 h-4" />
-                  </Button>
-                  {book.hasAudio && (
-                    <Button variant="outline" size="sm">
-                      <Volume2 className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {/* Resources Grid */}
+        {isLoading ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(8)].map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <Skeleton className="h-48 w-full mb-4" />
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2" />
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        ) : resources && resources.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {resources.map((resource) => (
+              <ResourceCard
+                key={resource.id}
+                resource={resource}
+                isFavorite={favoriteIds.has(resource.id)}
+                onAddToFavorites={() => 
+                  addToShelf.mutate({ 
+                    resourceId: resource.id, 
+                    shelf: 'FAVORI' 
+                  })
+                }
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Aucune ressource trouvée</p>
+          </div>
+        )}
 
         {/* My Lists */}
         <div className="mt-12">
@@ -129,19 +125,25 @@ const Bibliotheque = () => {
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardHeader>
                 <CardTitle className="text-lg">À lire</CardTitle>
-                <CardDescription>5 livres en attente</CardDescription>
+                <CardDescription>
+                  {shelves?.filter(s => s.shelf === 'A_LIRE').length || 0} ressources
+                </CardDescription>
               </CardHeader>
             </Card>
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardHeader>
                 <CardTitle className="text-lg">Favoris</CardTitle>
-                <CardDescription>12 ressources sauvegardées</CardDescription>
+                <CardDescription>
+                  {shelves?.filter(s => s.shelf === 'FAVORI').length || 0} ressources
+                </CardDescription>
               </CardHeader>
             </Card>
             <Card className="cursor-pointer hover:shadow-md transition-shadow">
               <CardHeader>
                 <CardTitle className="text-lg">Hors-ligne</CardTitle>
-                <CardDescription>8 ressources téléchargées</CardDescription>
+                <CardDescription>
+                  {shelves?.filter(s => s.shelf === 'HORS_LIGNE').length || 0} ressources
+                </CardDescription>
               </CardHeader>
             </Card>
           </div>

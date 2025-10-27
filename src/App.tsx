@@ -23,6 +23,7 @@ import CorrigerDevoir from "./pages/CorrigerDevoir";
 import Forum from "./pages/Forum";
 import Suivi from "./pages/Suivi";
 import Bibliotheque from "./pages/Bibliotheque";
+import { ResourceReader } from "./components/library/ResourceReader";
 import TuteurIA from "./pages/TuteurIA";
 import NotFound from "./pages/NotFound";
 
@@ -143,6 +144,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Bibliotheque />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bibliotheque/:id"
+              element={
+                <ProtectedRoute>
+                  <ResourceReader />
                 </ProtectedRoute>
               }
             />
