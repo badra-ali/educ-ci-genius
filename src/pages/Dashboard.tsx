@@ -60,7 +60,16 @@ const Dashboard = () => {
           return;
         }
 
-        // Charger les statistiques
+        // Rediriger les élèves vers leur dashboard spécifique
+        const { data: userRoles } = await supabase.rpc('get_user_roles', { _user_id: user.id });
+        const role = userRoles?.[0]?.role;
+        
+        if (role === 'ELEVE') {
+          navigate("/app/student");
+          return;
+        }
+
+        // Charger les statistiques pour les autres rôles
         await loadStats(user.id);
       }
       setLoading(false);
