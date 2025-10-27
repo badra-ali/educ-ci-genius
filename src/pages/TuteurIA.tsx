@@ -1,46 +1,138 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Bot, Send, Sparkles } from "lucide-react";
+import { ArrowLeft, Bot, Send, Sparkles, Loader2, Upload } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+
+type Message = { role: "user" | "assistant"; content: string };
+type Mode = "explanation" | "qcm" | "revision" | "summary" | null;
 
 const TuteurIA = () => {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([
+  const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Bonjour ! Je suis votre tuteur IA. Comment puis-je vous aider dans vos études aujourd'hui ?",
+      content: "Bonjour ! 👋 Je suis votre Tuteur IA. Comment puis-je vous aider dans vos études aujourd'hui ? Posez-moi une question, envoyez un PDF, ou choisissez un mode d'assistance.",
     },
   ]);
   const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedMode, setSelectedMode] = useState<Mode>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const modes = [
-    { label: "Expliquer une leçon", icon: "📚" },
-    { label: "Générer un QCM", icon: "✅" },
-    { label: "Aider à réviser", icon: "🎯" },
-    { label: "Résumer un PDF", icon: "📄" },
+    { label: "Expliquer une leçon", icon: "📚", value: "explanation" as Mode },
+    { label: "Générer un QCM", icon: "✅", value: "qcm" as Mode },
+    { label: "Aider à réviser", icon: "🎯", value: "revision" as Mode },
+    { label: "Résumer un PDF", icon: "📄", value: "summary" as Mode },
   ];
 
-  const handleSend = () => {
-    if (!input.trim()) return;
+  useEffect(() => {
+    scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-    setMessages([...messages, { role: "user", content: input }]);
+  const handleSend = async () => {
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setIsLoading(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content:
-            "Je comprends votre question. Laissez-moi vous aider à mieux comprendre ce sujet...",
+    try {
+      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tutor-chat`;
+      
+      const response = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
         },
-      ]);
-    }, 1000);
+        body: JSON.stringify({
+          messages: [...messages, userMessage],
+          mode: selectedMode,
+          sessionId: sessionId,
+          language: 'fr',
+        }),
+      });
+
+      if (!response.ok || !response.body) {
+        if (response.status === 429) {
+          toast.error("Trop de requêtes. Veuillez réessayer dans quelques instants.");
+          throw new Error('Rate limit exceeded');
+        }
+        if (response.status === 402) {
+          toast.error("Crédits AI épuisés. Contactez l'administrateur.");
+          throw new Error('Payment required');
+        }
+        throw new Error('Failed to start stream');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantMessage = "";
+      let newSessionId: string | null = null;
+
+      // Add empty assistant message
+      setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n').filter(line => line.trim() !== '');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              
+              // Check for session ID
+              if (parsed.sessionId) {
+                newSessionId = parsed.sessionId;
+                continue;
+              }
+
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                assistantMessage += content;
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = {
+                    role: "assistant",
+                    content: assistantMessage
+                  };
+                  return updated;
+                });
+              }
+            } catch (e) {
+              console.error('Error parsing SSE:', e);
+            }
+          }
+        }
+      }
+
+      if (newSessionId && !sessionId) {
+        setSessionId(newSessionId);
+      }
+
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Erreur lors de la communication avec le tuteur IA");
+      setMessages((prev) => prev.slice(0, -1)); // Remove empty assistant message
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -92,10 +184,18 @@ const TuteurIA = () => {
                             : "bg-muted"
                         }`}
                       >
-                        <p className="text-sm">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       </div>
                     </div>
                   ))}
+                  {isLoading && (
+                    <div className="flex justify-start">
+                      <div className="bg-muted rounded-lg p-4">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      </div>
+                    </div>
+                  )}
+                  <div ref={scrollRef} />
                 </div>
               </ScrollArea>
 
@@ -105,10 +205,15 @@ const TuteurIA = () => {
                     placeholder="Posez votre question..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSend()}
+                    onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
+                    disabled={isLoading}
                   />
-                  <Button onClick={handleSend}>
-                    <Send className="w-4 h-4" />
+                  <Button onClick={handleSend} disabled={isLoading}>
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -128,8 +233,12 @@ const TuteurIA = () => {
                 {modes.map((mode, index) => (
                   <Button
                     key={index}
-                    variant="outline"
+                    variant={selectedMode === mode.value ? "default" : "outline"}
                     className="w-full justify-start text-left"
+                    onClick={() => {
+                      setSelectedMode(mode.value);
+                      toast.success(`Mode "${mode.label}" activé`);
+                    }}
                   >
                     <span className="mr-2">{mode.icon}</span>
                     {mode.label}
