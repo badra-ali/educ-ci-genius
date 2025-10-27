@@ -36,15 +36,38 @@ const CreerCours = () => {
   const [loading, setLoading] = useState(false);
   
   // Formulaire
-  const [titre, setTitre] = useState("");
-  const [description, setDescription] = useState("");
+  const [titre, setTitre] = useState("Les équations du premier degré");
+  const [description, setDescription] = useState("Ce cours introduit les concepts fondamentaux des équations du premier degré. Les élèves apprendront à résoudre des équations simples et à les appliquer dans des situations concrètes.");
   const [matiereId, setMatiereId] = useState("");
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
-  const [visioUrl, setVisioUrl] = useState("");
-  const [objectifs, setObjectifs] = useState<string[]>([""]);
-  const [prerequis, setPrerequis] = useState<string[]>([""]);
+  const [visioUrl, setVisioUrl] = useState("https://meet.google.com/abc-defg-hij");
+  const [objectifs, setObjectifs] = useState<string[]>(["Comprendre la notion d'équation", "Résoudre des équations simples"]);
+  const [prerequis, setPrerequis] = useState<string[]>(["Opérations de base", "Nombres relatifs"]);
   const [blocs, setBlocs] = useState<Bloc[]>([
-    { type: 'chapitre', titre: 'Introduction', contenu: '', ordre: 1 }
+    { 
+      type: 'chapitre', 
+      titre: 'Introduction aux équations', 
+      contenu: 'Une équation est une égalité mathématique qui contient une ou plusieurs inconnues. Dans ce chapitre, nous allons découvrir les bases des équations du premier degré et apprendre à les résoudre pas à pas.\n\nExemple : 2x + 3 = 7\n\nPour résoudre cette équation, nous devons isoler x en effectuant les mêmes opérations des deux côtés de l\'égalité.', 
+      ordre: 1 
+    },
+    { 
+      type: 'chapitre', 
+      titre: 'Méthodes de résolution', 
+      contenu: 'Il existe plusieurs méthodes pour résoudre une équation :\n\n1. Méthode par substitution\n2. Méthode par addition/soustraction\n3. Méthode par multiplication/division\n\nNous allons étudier chacune de ces méthodes avec des exemples pratiques.', 
+      ordre: 2 
+    },
+    { 
+      type: 'video', 
+      titre: 'Tutoriel vidéo : Résolution d\'équations', 
+      url: 'https://www.youtube.com/watch?v=exemple', 
+      ordre: 3 
+    },
+    { 
+      type: 'chapitre', 
+      titre: 'Exercices pratiques', 
+      contenu: 'Exercice 1 : Résoudre 3x + 5 = 14\nExercice 2 : Résoudre 2(x - 3) = 8\nExercice 3 : Résoudre 5x - 2 = 3x + 10\n\nN\'oubliez pas de vérifier vos réponses en remplaçant x par la valeur trouvée !', 
+      ordre: 4 
+    }
   ]);
   
   // Données
