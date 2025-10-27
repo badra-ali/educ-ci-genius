@@ -122,6 +122,21 @@ const Onboarding = () => {
   };
 
   const fetchEleves = async () => {
+    // Liste fictive d'élèves pour les tests
+    const elevesTest = [
+      { id: "1", first_name: "Marie", last_name: "Kouassi" },
+      { id: "2", first_name: "Jean", last_name: "Koné" },
+      { id: "3", first_name: "Fatou", last_name: "Diallo" },
+      { id: "4", first_name: "Amadou", last_name: "Traoré" },
+      { id: "5", first_name: "Aïcha", last_name: "Bamba" },
+      { id: "6", first_name: "Ibrahim", last_name: "Touré" },
+      { id: "7", first_name: "Kadiatou", last_name: "Sanogo" },
+      { id: "8", first_name: "Moussa", last_name: "Coulibaly" },
+    ];
+    
+    setEleves(elevesTest);
+    
+    /* Version réelle à activer plus tard:
     const { data, error } = await supabase
       .from("user_roles")
       .select(`
@@ -135,7 +150,6 @@ const Onboarding = () => {
       return;
     }
     
-    // Extraire les élèves uniques et trier par nom
     const uniqueEleves = data?.map((item: any) => ({
       id: item.user_id,
       first_name: item.profiles.first_name,
@@ -147,6 +161,7 @@ const Onboarding = () => {
     });
     
     setEleves(uniqueEleves || []);
+    */
   };
 
   const handleStep1Submit = async (e: React.FormEvent) => {
