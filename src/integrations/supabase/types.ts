@@ -85,6 +85,60 @@ export type Database = {
           },
         ]
       }
+      audio_jobs: {
+        Row: {
+          audio_url: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          rate: number | null
+          resource_id: string
+          section_id: string | null
+          status: string
+          updated_at: string | null
+          voice: string | null
+        }
+        Insert: {
+          audio_url?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          rate?: number | null
+          resource_id: string
+          section_id?: string | null
+          status?: string
+          updated_at?: string | null
+          voice?: string | null
+        }
+        Update: {
+          audio_url?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          rate?: number | null
+          resource_id?: string
+          section_id?: string | null
+          status?: string
+          updated_at?: string | null
+          voice?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audio_jobs_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audio_jobs_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "resource_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -757,6 +811,236 @@ export type Database = {
           },
         ]
       }
+      resource_assets: {
+        Row: {
+          bytes: number | null
+          checksum: string | null
+          created_at: string | null
+          id: string
+          kind: string
+          mime: string | null
+          resource_id: string
+          url: string
+        }
+        Insert: {
+          bytes?: number | null
+          checksum?: string | null
+          created_at?: string | null
+          id?: string
+          kind: string
+          mime?: string | null
+          resource_id: string
+          url: string
+        }
+        Update: {
+          bytes?: number | null
+          checksum?: string | null
+          created_at?: string | null
+          id?: string
+          kind?: string
+          mime?: string | null
+          resource_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_assets_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_embeddings: {
+        Row: {
+          created_at: string | null
+          embedding: string | null
+          id: string
+          resource_id: string
+          section_id: string | null
+          text_excerpt: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          resource_id: string
+          section_id?: string | null
+          text_excerpt?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          embedding?: string | null
+          id?: string
+          resource_id?: string
+          section_id?: string | null
+          text_excerpt?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_embeddings_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resource_embeddings_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "resource_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_sections: {
+        Row: {
+          created_at: string | null
+          end_locator: string | null
+          id: string
+          index: number
+          resource_id: string
+          start_locator: string | null
+          text_content: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          end_locator?: string | null
+          id?: string
+          index: number
+          resource_id: string
+          start_locator?: string | null
+          text_content?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          end_locator?: string | null
+          id?: string
+          index?: number
+          resource_id?: string
+          start_locator?: string | null
+          text_content?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_sections_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          audio_available: boolean | null
+          author: string
+          cover_url: string | null
+          created_at: string | null
+          etablissement_id: string | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          is_public: boolean | null
+          language: string
+          level: string
+          subject: string
+          summary: string | null
+          tags: string[] | null
+          title: string
+          type: string
+          updated_at: string | null
+          views_count: number | null
+        }
+        Insert: {
+          audio_available?: boolean | null
+          author: string
+          cover_url?: string | null
+          created_at?: string | null
+          etablissement_id?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          is_public?: boolean | null
+          language?: string
+          level: string
+          subject: string
+          summary?: string | null
+          tags?: string[] | null
+          title: string
+          type: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Update: {
+          audio_available?: boolean | null
+          author?: string
+          cover_url?: string | null
+          created_at?: string | null
+          etablissement_id?: string | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          is_public?: boolean | null
+          language?: string
+          level?: string
+          subject?: string
+          summary?: string | null
+          tags?: string[] | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      search_logs: {
+        Row: {
+          clicked_resource_id: string | null
+          created_at: string | null
+          filters: Json | null
+          id: string
+          query: string
+          user_id: string | null
+        }
+        Insert: {
+          clicked_resource_id?: string | null
+          created_at?: string | null
+          filters?: Json | null
+          id?: string
+          query: string
+          user_id?: string | null
+        }
+        Update: {
+          clicked_resource_id?: string | null
+          created_at?: string | null
+          filters?: Json | null
+          id?: string
+          query?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "search_logs_clicked_resource_id_fkey"
+            columns: ["clicked_resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tentatives_qcm: {
         Row: {
           duree_secondes: number | null
@@ -911,6 +1195,85 @@ export type Database = {
         }
         Relationships: []
       }
+      user_highlights: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          id: string
+          locator: string
+          note: string | null
+          resource_id: string
+          text: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          locator: string
+          note?: string | null
+          resource_id: string
+          text?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          id?: string
+          locator?: string
+          note?: string | null
+          resource_id?: string
+          text?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_highlights_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_reading: {
+        Row: {
+          id: string
+          last_locator: string | null
+          progress_percent: number | null
+          resource_id: string
+          seconds_read: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_locator?: string | null
+          progress_percent?: number | null
+          resource_id: string
+          seconds_read?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_locator?: string | null
+          progress_percent?: number | null
+          resource_id?: string
+          seconds_read?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reading_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -943,6 +1306,38 @@ export type Database = {
           },
         ]
       }
+      user_shelves: {
+        Row: {
+          created_at: string | null
+          id: string
+          resource_id: string
+          shelf: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          resource_id: string
+          shelf: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          resource_id?: string
+          shelf?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_shelves_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -961,6 +1356,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      resources_search_text: {
+        Args: { r: Database["public"]["Tables"]["resources"]["Row"] }
+        Returns: unknown
       }
       update_user_etablissement: {
         Args: { _etablissement_id: string; _user_id: string }
