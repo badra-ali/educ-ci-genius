@@ -353,19 +353,64 @@ Le projet utilise un design system basé sur les couleurs de la Côte d'Ivoire :
 - [x] Validation Zod
 - [x] .env.example créé
 
-### Phase 2 - Architecture (À venir)
-- [ ] Structure par features
-- [ ] Service layer
-- [ ] ESLint + Prettier configurés
-- [ ] Skeletons & loading states
-- [ ] Husky + lint-staged
+### Phase 2 - Architecture ✅
+- [x] Structure par features (cours, devoirs)
+- [x] Service layer
+- [x] React Query hooks
+- [x] Prettier configuré
+- [x] Query keys hiérarchiques
 
-### Phase 3 - Avancé (À venir)
+### Phase 3 - Avancé ✅
+- [x] PWA + offline mode
+- [x] i18n (fr/en)
+- [x] Cache intelligent Supabase
+- [x] OfflineIndicator
+- [x] Page /install
 - [ ] Tests (Vitest + Playwright)
 - [ ] CI/CD GitHub Actions
-- [ ] PWA + offline mode
-- [ ] i18n (fr/en)
 - [ ] Analytics dashboard
+
+---
+
+## 📱 Progressive Web App (PWA)
+
+L'application peut être installée sur n'importe quel appareil (mobile ou ordinateur) pour une expérience app native.
+
+### Fonctionnalités PWA
+
+✅ **Installation sur appareil** - Ajoutez l'app à votre écran d'accueil  
+✅ **Mode hors-ligne** - Consultez vos cours même sans internet  
+✅ **Cache intelligent** - Chargement ultra-rapide  
+✅ **Notifications** - Alertes en temps réel (à venir)  
+✅ **Mise à jour automatique** - Toujours la dernière version
+
+### Comment installer ?
+
+Visitez `/install` dans l'application ou utilisez le menu de votre navigateur :
+
+**Sur mobile (Android/iOS)** :
+- Menu navigateur → "Installer l'application" ou "Ajouter à l'écran d'accueil"
+
+**Sur ordinateur** :
+- Icône d'installation dans la barre d'adresse du navigateur
+
+---
+
+## 🌍 Internationalisation (i18n)
+
+L'application supporte plusieurs langues :
+
+- 🇨🇮 **Français** (par défaut - Côte d'Ivoire)
+- 🇬🇧 **Anglais**
+
+La langue est détectée automatiquement depuis :
+1. La langue sauvegardée dans le navigateur
+2. La langue du navigateur
+3. Français par défaut
+
+### Changer de langue
+
+Utilisez le sélecteur de langue (`<LanguageSwitcher />`) dans l'interface.
 
 ---
 

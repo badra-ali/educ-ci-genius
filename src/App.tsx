@@ -6,11 +6,13 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { RoleGate } from "@/components/auth/RoleGate";
+import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { queryClient } from "@/lib/queryClient";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
+import Install from "./pages/Install";
 import ListeCours from "./pages/ListeCours";
 import CoursDetail from "./pages/CoursDetail";
 import CreerCours from "./pages/CreerCours";
@@ -30,10 +32,12 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
+        <OfflineIndicator />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/install" element={<Install />} />
             
             {/* Protected routes */}
             <Route
