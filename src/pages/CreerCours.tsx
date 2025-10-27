@@ -92,6 +92,8 @@ const CreerCours = () => {
       .from("user_roles")
       .select("etablissement_id")
       .eq("user_id", user.id)
+      .eq("role", "ENSEIGNANT")
+      .not("etablissement_id", "is", null)
       .maybeSingle();
 
     if (userRoles?.etablissement_id) {
@@ -167,12 +169,28 @@ const CreerCours = () => {
     }
 
     // Récupérer l'établissement de la matière sélectionnée
-    const selectedMatiere = matieres.find(m => m.id === matiereId);
+    const selectedMatiere = matieres.find((m: any) => m.id === matiereId);
     const etablissement = selectedMatiere?.etablissement_id;
 
     if (!etablissement) {
       toast.error("Impossible de déterminer l'établissement");
       return;
+    }
+
+    // Assurer la cohérence RLS: mettre à jour le user_roles si nécessaire
+    const { data: authData } = await supabase.auth.getUser();
+    const userId = authData.user?.id;
+    if (!userId) {
+      toast.error("Session expirée, veuillez vous reconnecter");
+      return;
+    }
+    try {
+      await supabase.rpc('update_user_etablissement', {
+        _user_id: userId,
+        _etablissement_id: etablissement,
+      });
+    } catch (e) {
+      // On ignore si déjà aligné
     }
 
     // Validation
