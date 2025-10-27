@@ -20,7 +20,7 @@ export default function ParentMessages() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   const { data: threads, isLoading: threadsLoading } = useParentThreads();
-  const { messages, loading: messagesLoading, fetchMessages } = useMessages();
+  const { messages, loading: messagesLoading, fetchMessages } = useMessages(selectedThreadId || "");
   const { sendMessage, sending } = useSendMessage();
 
   useEffect(() => {
