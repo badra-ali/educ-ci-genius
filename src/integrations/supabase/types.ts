@@ -1606,8 +1606,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_attendance_rate: {
+        Args: { p_end_date: string; p_start_date: string; p_student_id: string }
+        Returns: number
+      }
       calculate_class_average: {
         Args: { p_classe_id: string; p_matiere_id: string; p_period: string }
+        Returns: number
+      }
+      get_parent_children: {
+        Args: { p_parent_id: string }
+        Returns: {
+          classe_id: string
+          classe_nom: string
+          eleve_id: string
+          first_name: string
+          last_name: string
+          relation: string
+        }[]
+      }
+      get_student_average: {
+        Args: { p_period: string; p_student_id: string }
         Returns: number
       }
       get_teacher_classes: {
@@ -1631,6 +1650,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_parent_of_student: {
+        Args: { p_parent_id: string; p_student_id: string }
         Returns: boolean
       }
       resources_search_text: {
