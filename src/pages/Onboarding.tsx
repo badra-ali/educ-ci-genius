@@ -55,11 +55,14 @@ const Onboarding = () => {
     if (selectedEtablissement) {
       fetchClasses();
       fetchMatieres();
-      if (primaryRole === 'PARENT') {
-        fetchEleves();
-      }
     }
-  }, [selectedEtablissement, primaryRole]);
+  }, [selectedEtablissement]);
+
+  useEffect(() => {
+    if (primaryRole === 'PARENT') {
+      fetchEleves();
+    }
+  }, [primaryRole]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -131,32 +134,29 @@ const Onboarding = () => {
   };
 
   const fetchEleves = async () => {
-    if (!selectedEtablissement) return;
-    
     const { data, error } = await supabase
-      .from("eleve_classes")
+      .from("user_roles")
       .select(`
         user_id,
         profiles!inner(id, first_name, last_name)
       `)
-      .eq("actif", true);
+      .eq("role", "ELEVE");
     
     if (error) {
       console.error("Erreur chargement élèves:", error);
       return;
     }
     
-    // Extraire les élèves uniques
-    const uniqueEleves = data?.reduce((acc: any[], curr: any) => {
-      if (!acc.find(e => e.id === curr.user_id)) {
-        acc.push({
-          id: curr.user_id,
-          first_name: curr.profiles.first_name,
-          last_name: curr.profiles.last_name,
-        });
-      }
-      return acc;
-    }, []);
+    // Extraire les élèves uniques et trier par nom
+    const uniqueEleves = data?.map((item: any) => ({
+      id: item.user_id,
+      first_name: item.profiles.first_name,
+      last_name: item.profiles.last_name,
+    })).sort((a: any, b: any) => {
+      const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
+      const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
     
     setEleves(uniqueEleves || []);
   };
