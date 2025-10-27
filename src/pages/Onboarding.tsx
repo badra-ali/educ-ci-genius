@@ -8,10 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { GraduationCap, Building2, Users, BookOpen, Loader2, Search } from "lucide-react";
+import { GraduationCap, Building2, Users, BookOpen, Loader2 } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -29,7 +27,6 @@ const Onboarding = () => {
   const [selectedMatieres, setSelectedMatieres] = useState<string[]>([]);
   const [selectedEleve, setSelectedEleve] = useState("");
   const [lienParente, setLienParente] = useState("");
-  const [openEleveCombobox, setOpenEleveCombobox] = useState(false);
   
   // Listes de données
   const [etablissements, setEtablissements] = useState<any[]>([]);
@@ -443,51 +440,42 @@ const Onboarding = () => {
               {primaryRole === 'PARENT' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="eleve">Sélectionnez votre enfant</Label>
-                    <Popover open={openEleveCombobox} onOpenChange={setOpenEleveCombobox}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openEleveCombobox}
-                          className="w-full justify-between"
-                        >
-                          {selectedEleve
-                            ? eleves.find((eleve) => eleve.id === selectedEleve)
-                                ? `${eleves.find((eleve) => eleve.id === selectedEleve)?.first_name} ${eleves.find((eleve) => eleve.id === selectedEleve)?.last_name}`
-                                : "Choisir un élève"
-                            : "Choisir un élève"}
-                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-full p-0">
-                        <Command>
-                          <CommandInput placeholder="Rechercher un élève..." />
-                          <CommandList>
-                            <CommandEmpty>
-                              Aucun élève trouvé. Si votre enfant n'a pas de compte, contactez l'administration de l'établissement.
-                            </CommandEmpty>
-                            <CommandGroup>
-                              {eleves.map((eleve) => (
-                                <CommandItem
-                                  key={eleve.id}
-                                  value={`${eleve.first_name} ${eleve.last_name}`}
-                                  onSelect={() => {
-                                    setSelectedEleve(eleve.id);
-                                    setOpenEleveCombobox(false);
-                                  }}
-                                >
-                                  {eleve.first_name} {eleve.last_name}
-                                </CommandItem>
-                              ))}
-                            </CommandGroup>
-                          </CommandList>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
-                    <p className="text-xs text-muted-foreground">
-                      Si votre enfant n'apparaît pas dans la liste, contactez l'administration pour créer son compte.
-                    </p>
+                    <Label>Sélectionnez votre enfant</Label>
+                    {eleves.length === 0 ? (
+                      <div className="text-center p-8 border rounded-lg bg-muted/50">
+                        <Users className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground">
+                          Aucun élève trouvé. Contactez l'administration de l'établissement pour créer le compte de votre enfant.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-3">
+                        {eleves.map((eleve) => (
+                          <div
+                            key={eleve.id}
+                            onClick={() => setSelectedEleve(eleve.id)}
+                            className={`
+                              flex items-center p-4 rounded-lg border-2 cursor-pointer transition-all
+                              ${selectedEleve === eleve.id 
+                                ? 'border-primary bg-primary/5' 
+                                : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                              }
+                            `}
+                          >
+                            <div className="flex-1">
+                              <p className="font-medium">
+                                {eleve.first_name} {eleve.last_name}
+                              </p>
+                            </div>
+                            {selectedEleve === eleve.id && (
+                              <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                                <div className="w-2 h-2 rounded-full bg-white" />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   
                   <div className="space-y-2">
