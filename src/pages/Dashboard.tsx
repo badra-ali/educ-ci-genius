@@ -14,11 +14,14 @@ import {
   User
 } from "lucide-react";
 import { toast } from "sonner";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { primaryRole, loading: roleLoading } = useUserRole();
 
   useEffect(() => {
     const getUser = async () => {
@@ -27,6 +30,15 @@ const Dashboard = () => {
         navigate("/auth");
       } else {
         setUser(user);
+        
+        // Récupérer le profil
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+        
+        setProfile(profileData);
       }
       setLoading(false);
     };
@@ -50,7 +62,7 @@ const Dashboard = () => {
     navigate("/");
   };
 
-  if (loading) {
+  if (loading || roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -58,9 +70,20 @@ const Dashboard = () => {
     );
   }
 
-  const userRole = user?.user_metadata?.role || "ELEVE";
-  const firstName = user?.user_metadata?.first_name || "Utilisateur";
-  const lastName = user?.user_metadata?.last_name || "";
+  const getRoleLabel = (role: string) => {
+    const labels: Record<string, string> = {
+      ELEVE: "Élève",
+      ENSEIGNANT: "Enseignant",
+      PARENT: "Parent",
+      ADMIN_ECOLE: "Admin École",
+      ADMIN_SYSTEME: "Admin Système",
+    };
+    return labels[role] || role;
+  };
+
+  const userRole = primaryRole || "ELEVE";
+  const firstName = profile?.first_name || user?.user_metadata?.first_name || "Utilisateur";
+  const lastName = profile?.last_name || user?.user_metadata?.last_name || "";
 
   const modules = [
     {
@@ -113,7 +136,8 @@ const Dashboard = () => {
                   {userRole === "ELEVE" && "Espace Élève"}
                   {userRole === "ENSEIGNANT" && "Espace Enseignant"}
                   {userRole === "PARENT" && "Espace Parent"}
-                  {userRole === "ADMIN" && "Espace Administrateur"}
+                  {userRole === "ADMIN_ECOLE" && "Espace Administrateur École"}
+                  {userRole === "ADMIN_SYSTEME" && "Espace Administrateur Système"}
                 </p>
               </div>
             </div>
@@ -121,9 +145,12 @@ const Dashboard = () => {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <User className="w-5 h-5 text-muted-foreground" />
-                <span className="text-sm font-medium">
-                  {firstName} {lastName}
-                </span>
+                <div className="text-sm">
+                  <div className="font-medium">{firstName} {lastName}</div>
+                  {primaryRole && (
+                    <div className="text-xs text-primary">{getRoleLabel(primaryRole)}</div>
+                  )}
+                </div>
               </div>
               <Button variant="outline" size="sm" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4 mr-2" />

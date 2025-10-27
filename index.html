@@ -3,6 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2563EB" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="IA ÉDU.CI" />
     <title>IA ÉDU.CI - L'avenir de l'éducation en Côte d'Ivoire</title>
     <meta name="description" content="Super-application éducative pour la Côte d'Ivoire avec classe virtuelle, suivi scolaire, bibliothèque numérique et tuteur IA intelligent" />
     <meta name="author" content="IA ÉDU.CI" />
@@ -19,6 +25,15 @@
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
     
     <link rel="canonical" href="https://3bd5242d-99c7-4716-b5ae-b75d7c5f9802.lovableproject.com" />
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('Service Worker enregistré'))
+            .catch(err => console.log('Erreur Service Worker:', err));
+        });
+      }
+    </script>
   </head>
 
   <body>

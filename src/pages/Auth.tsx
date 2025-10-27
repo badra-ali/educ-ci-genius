@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GraduationCap, Loader2 } from "lucide-react";
 
-type UserRole = "ELEVE" | "ENSEIGNANT" | "PARENT" | "ADMIN";
+type UserRole = "ELEVE" | "ENSEIGNANT" | "PARENT" | "ADMIN_ECOLE";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -164,7 +164,7 @@ const Auth = () => {
                     <SelectItem value="ELEVE">Élève</SelectItem>
                     <SelectItem value="ENSEIGNANT">Enseignant</SelectItem>
                     <SelectItem value="PARENT">Parent</SelectItem>
-                    <SelectItem value="ADMIN">Administrateur</SelectItem>
+                    <SelectItem value="ADMIN_ECOLE">Administrateur École</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
