@@ -1,8 +1,12 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { RoleGate } from "@/components/auth/RoleGate";
+import { queryClient } from "@/lib/queryClient";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -20,36 +24,140 @@ import Bibliotheque from "./pages/Bibliotheque";
 import TuteurIA from "./pages/TuteurIA";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/classe" element={<ListeCours />} />
-          <Route path="/classe/:id" element={<CoursDetail />} />
-          <Route path="/cours/new" element={<CreerCours />} />
-          <Route path="/qcm/new" element={<CreerQcm />} />
-          <Route path="/qcm/:id/passer" element={<PasserQcm />} />
-          <Route path="/devoir/:id" element={<DevoirDetail />} />
-          <Route path="/devoir/:id/corriger" element={<CorrigerDevoir />} />
-          <Route path="/forum/:coursId" element={<Forum />} />
-          <Route path="/suivi" element={<Suivi />} />
-          <Route path="/bibliotheque" element={<Bibliotheque />} />
-          <Route path="/tuteur-ia" element={<TuteurIA />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            
+            {/* Protected routes */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <Onboarding />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/classe"
+              element={
+                <ProtectedRoute>
+                  <ListeCours />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/classe/:id"
+              element={
+                <ProtectedRoute>
+                  <CoursDetail />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Enseignant-only routes */}
+            <Route
+              path="/cours/new"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ENSEIGNANT", "ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <CreerCours />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/qcm/new"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ENSEIGNANT", "ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <CreerQcm />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/devoir/:id/corriger"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ENSEIGNANT", "ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <CorrigerDevoir />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Student/Teacher routes */}
+            <Route
+              path="/qcm/:id/passer"
+              element={
+                <ProtectedRoute>
+                  <PasserQcm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/devoir/:id"
+              element={
+                <ProtectedRoute>
+                  <DevoirDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/forum/:coursId"
+              element={
+                <ProtectedRoute>
+                  <Forum />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/suivi"
+              element={
+                <ProtectedRoute>
+                  <Suivi />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bibliotheque"
+              element={
+                <ProtectedRoute>
+                  <Bibliotheque />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tuteur-ia"
+              element={
+                <ProtectedRoute>
+                  <TuteurIA />
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
