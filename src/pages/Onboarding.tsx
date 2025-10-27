@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { GraduationCap, Building2, Users, BookOpen, Loader2 } from "lucide-react";
+import { GraduationCap, Building2, Users, BookOpen, Loader2, Search } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -27,6 +29,7 @@ const Onboarding = () => {
   const [selectedMatieres, setSelectedMatieres] = useState<string[]>([]);
   const [selectedEleve, setSelectedEleve] = useState("");
   const [lienParente, setLienParente] = useState("");
+  const [openEleveCombobox, setOpenEleveCombobox] = useState(false);
   
   // Listes de données
   const [etablissements, setEtablissements] = useState<any[]>([]);
@@ -441,18 +444,45 @@ const Onboarding = () => {
                 <>
                   <div className="space-y-2">
                     <Label htmlFor="eleve">Sélectionnez votre enfant</Label>
-                    <Select value={selectedEleve} onValueChange={setSelectedEleve}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Choisir un élève" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {eleves.map((eleve) => (
-                          <SelectItem key={eleve.id} value={eleve.id}>
-                            {eleve.first_name} {eleve.last_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Popover open={openEleveCombobox} onOpenChange={setOpenEleveCombobox}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={openEleveCombobox}
+                          className="w-full justify-between"
+                        >
+                          {selectedEleve
+                            ? eleves.find((eleve) => eleve.id === selectedEleve)
+                                ? `${eleves.find((eleve) => eleve.id === selectedEleve)?.first_name} ${eleves.find((eleve) => eleve.id === selectedEleve)?.last_name}`
+                                : "Choisir un élève"
+                            : "Choisir un élève"}
+                          <Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-full p-0">
+                        <Command>
+                          <CommandInput placeholder="Rechercher un élève..." />
+                          <CommandList>
+                            <CommandEmpty>Aucun élève trouvé.</CommandEmpty>
+                            <CommandGroup>
+                              {eleves.map((eleve) => (
+                                <CommandItem
+                                  key={eleve.id}
+                                  value={`${eleve.first_name} ${eleve.last_name}`}
+                                  onSelect={() => {
+                                    setSelectedEleve(eleve.id);
+                                    setOpenEleveCombobox(false);
+                                  }}
+                                >
+                                  {eleve.first_name} {eleve.last_name}
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
                   </div>
                   
                   <div className="space-y-2">
