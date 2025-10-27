@@ -25,6 +25,7 @@ import Suivi from "./pages/Suivi";
 import Bibliotheque from "./pages/Bibliotheque";
 import { ResourceReader } from "./components/library/ResourceReader";
 import TuteurIA from "./pages/TuteurIA";
+import Relations from "./pages/Relations";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -160,6 +161,16 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <TuteurIA />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/relations"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <Relations />
+                  </RoleGate>
                 </ProtectedRoute>
               }
             />
