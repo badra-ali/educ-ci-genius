@@ -85,6 +85,56 @@ export type Database = {
           },
         ]
       }
+      attendance: {
+        Row: {
+          created_at: string | null
+          date: string
+          declared_by: string | null
+          etablissement_id: string
+          id: string
+          justification_url: string | null
+          reason: string | null
+          status: string
+          student_id: string
+          updated_at: string | null
+          validated: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          declared_by?: string | null
+          etablissement_id: string
+          id?: string
+          justification_url?: string | null
+          reason?: string | null
+          status: string
+          student_id: string
+          updated_at?: string | null
+          validated?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          declared_by?: string | null
+          etablissement_id?: string
+          id?: string
+          justification_url?: string | null
+          reason?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string | null
+          validated?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audio_jobs: {
         Row: {
           audio_url: string | null
@@ -500,6 +550,66 @@ export type Database = {
         }
         Relationships: []
       }
+      grades: {
+        Row: {
+          coefficient: number | null
+          comment: string | null
+          created_at: string | null
+          etablissement_id: string
+          id: string
+          matiere_id: string
+          period: string
+          score: number
+          student_id: string
+          teacher_id: string
+          updated_at: string | null
+          validated: boolean | null
+        }
+        Insert: {
+          coefficient?: number | null
+          comment?: string | null
+          created_at?: string | null
+          etablissement_id: string
+          id?: string
+          matiere_id: string
+          period: string
+          score: number
+          student_id: string
+          teacher_id: string
+          updated_at?: string | null
+          validated?: boolean | null
+        }
+        Update: {
+          coefficient?: number | null
+          comment?: string | null
+          created_at?: string | null
+          etablissement_id?: string
+          id?: string
+          matiere_id?: string
+          period?: string
+          score?: number
+          student_id?: string
+          teacher_id?: string
+          updated_at?: string | null
+          validated?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grades_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grades_matiere_id_fkey"
+            columns: ["matiere_id"]
+            isOneToOne: false
+            referencedRelation: "matieres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matieres: {
         Row: {
           actif: boolean | null
@@ -811,6 +921,56 @@ export type Database = {
           },
         ]
       }
+      report_cards: {
+        Row: {
+          average: number | null
+          created_at: string | null
+          etablissement_id: string
+          id: string
+          pdf_url: string | null
+          period: string
+          rank: number | null
+          remarks: string | null
+          student_id: string
+          total_students: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          average?: number | null
+          created_at?: string | null
+          etablissement_id: string
+          id?: string
+          pdf_url?: string | null
+          period: string
+          rank?: number | null
+          remarks?: string | null
+          student_id: string
+          total_students?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          average?: number | null
+          created_at?: string | null
+          etablissement_id?: string
+          id?: string
+          pdf_url?: string | null
+          period?: string
+          rank?: number | null
+          remarks?: string | null
+          student_id?: string
+          total_students?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_cards_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       resource_assets: {
         Row: {
           bytes: number | null
@@ -1002,6 +1162,73 @@ export type Database = {
             columns: ["etablissement_id"]
             isOneToOne: false
             referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schedule: {
+        Row: {
+          classe_id: string
+          created_at: string | null
+          day: string
+          end_time: string
+          etablissement_id: string
+          id: string
+          matiere_id: string
+          room: string | null
+          start_time: string
+          teacher_id: string | null
+          updated_at: string | null
+          week_type: string | null
+        }
+        Insert: {
+          classe_id: string
+          created_at?: string | null
+          day: string
+          end_time: string
+          etablissement_id: string
+          id?: string
+          matiere_id: string
+          room?: string | null
+          start_time: string
+          teacher_id?: string | null
+          updated_at?: string | null
+          week_type?: string | null
+        }
+        Update: {
+          classe_id?: string
+          created_at?: string | null
+          day?: string
+          end_time?: string
+          etablissement_id?: string
+          id?: string
+          matiere_id?: string
+          room?: string | null
+          start_time?: string
+          teacher_id?: string | null
+          updated_at?: string | null
+          week_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_classe_id_fkey"
+            columns: ["classe_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "schedule_matiere_id_fkey"
+            columns: ["matiere_id"]
+            isOneToOne: false
+            referencedRelation: "matieres"
             referencedColumns: ["id"]
           },
         ]
