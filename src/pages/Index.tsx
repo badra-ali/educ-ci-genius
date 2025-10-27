@@ -1,10 +1,27 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useNavigate } from "react-router-dom";
 import { BookOpen, Calendar, GraduationCap, Library, Bot, ArrowRight, CheckCircle2 } from "lucide-react";
+import Autoplay from "embla-carousel-autoplay";
+import { useRef } from "react";
+import heroImage1 from "@/assets/hero-1.jpg";
+import heroImage2 from "@/assets/hero-2.jpg";
+import heroImage3 from "@/assets/hero-3.jpg";
+import heroImage4 from "@/assets/hero-4.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
+  const plugin = useRef(
+    Autoplay({ delay: 5000, stopOnInteraction: false })
+  );
+
+  const heroImages = [
+    { src: heroImage1, alt: "Étudiants utilisant des tablettes en classe" },
+    { src: heroImage2, alt: "Enseignante présentant sur tableau interactif" },
+    { src: heroImage3, alt: "Étudiants consultant des ressources numériques" },
+    { src: heroImage4, alt: "Étudiant utilisant le tuteur IA" },
+  ];
 
   const features = [
     {
@@ -47,43 +64,66 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden gradient-hero">
-        <div className="container mx-auto px-4 py-20">
-          <div className="max-w-4xl mx-auto text-center text-white">
-            <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-6">
-              <GraduationCap className="w-10 h-10" />
-            </div>
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-              IA ÉDU.CI
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-white/90">
-              L'avenir de l'éducation intelligente en Côte d'Ivoire
-            </p>
-            <p className="text-lg mb-10 text-white/80 max-w-2xl mx-auto">
-              Une super-application éducative qui regroupe classe virtuelle, suivi scolaire,
-              bibliothèque numérique et tuteur IA pour révolutionner l'apprentissage
-            </p>
-            <div className="flex gap-4 justify-center flex-wrap">
-              <Button
-                size="lg"
-                variant="secondary"
-                className="text-lg px-8 shadow-xl"
-                onClick={() => navigate("/auth")}
-              >
-                Commencer maintenant
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-lg px-8 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
-                onClick={() => navigate("/dashboard")}
-              >
-                Découvrir la démo
-              </Button>
-            </div>
-          </div>
-        </div>
+      <section className="relative overflow-hidden">
+        <Carousel
+          plugins={[plugin.current]}
+          className="w-full"
+          opts={{
+            loop: true,
+          }}
+        >
+          <CarouselContent>
+            {heroImages.map((image, index) => (
+              <CarouselItem key={index}>
+                <div className="relative h-[600px] md:h-[700px]">
+                  <img
+                    src={image.src}
+                    alt={image.alt}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/70 to-transparent">
+                    <div className="container mx-auto px-4 py-20 h-full flex items-center">
+                      <div className="max-w-3xl text-white">
+                        <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6">
+                          <GraduationCap className="w-10 h-10" />
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
+                          IA ÉDU.CI
+                        </h1>
+                        <p className="text-xl md:text-2xl mb-8 text-white/90">
+                          L'avenir de l'éducation intelligente en Côte d'Ivoire
+                        </p>
+                        <p className="text-lg mb-10 text-white/80 max-w-2xl">
+                          Une super-application éducative qui regroupe classe virtuelle, suivi scolaire,
+                          bibliothèque numérique et tuteur IA pour révolutionner l'apprentissage
+                        </p>
+                        <div className="flex gap-4 flex-wrap">
+                          <Button
+                            size="lg"
+                            variant="secondary"
+                            className="text-lg px-8 shadow-xl"
+                            onClick={() => navigate("/auth")}
+                          >
+                            Commencer maintenant
+                            <ArrowRight className="ml-2 w-5 h-5" />
+                          </Button>
+                          <Button
+                            size="lg"
+                            variant="outline"
+                            className="text-lg px-8 bg-white/10 backdrop-blur-sm border-white/20 text-white hover:bg-white/20"
+                            onClick={() => navigate("/dashboard")}
+                          >
+                            Découvrir la démo
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+        </Carousel>
       </section>
 
       {/* Features Section */}
