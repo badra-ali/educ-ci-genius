@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      analytics_events: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          props: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          props?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          props?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       attachments: {
         Row: {
           cours_id: string | null
@@ -89,6 +113,7 @@ export type Database = {
         Row: {
           created_at: string | null
           date: string
+          decision: string | null
           declared_by: string | null
           etablissement_id: string
           id: string
@@ -98,10 +123,12 @@ export type Database = {
           student_id: string
           updated_at: string | null
           validated: boolean | null
+          validated_by: string | null
         }
         Insert: {
           created_at?: string | null
           date: string
+          decision?: string | null
           declared_by?: string | null
           etablissement_id: string
           id?: string
@@ -111,10 +138,12 @@ export type Database = {
           student_id: string
           updated_at?: string | null
           validated?: boolean | null
+          validated_by?: string | null
         }
         Update: {
           created_at?: string | null
           date?: string
+          decision?: string | null
           declared_by?: string | null
           etablissement_id?: string
           id?: string
@@ -124,6 +153,7 @@ export type Database = {
           student_id?: string
           updated_at?: string | null
           validated?: boolean | null
+          validated_by?: string | null
         }
         Relationships: [
           {
@@ -663,6 +693,7 @@ export type Database = {
           contenu: string
           created_at: string | null
           id: string
+          read_by: string[] | null
           thread_id: string
           updated_at: string | null
         }
@@ -671,6 +702,7 @@ export type Database = {
           contenu: string
           created_at?: string | null
           id?: string
+          read_by?: string[] | null
           thread_id: string
           updated_at?: string | null
         }
@@ -679,6 +711,7 @@ export type Database = {
           contenu?: string
           created_at?: string | null
           id?: string
+          read_by?: string[] | null
           thread_id?: string
           updated_at?: string | null
         }
@@ -877,6 +910,7 @@ export type Database = {
           created_at: string | null
           devoir_id: string
           eleve_id: string
+          graded_at: string | null
           id: string
           note: number | null
           note_at: string | null
@@ -890,6 +924,7 @@ export type Database = {
           created_at?: string | null
           devoir_id: string
           eleve_id: string
+          graded_at?: string | null
           id?: string
           note?: number | null
           note_at?: string | null
@@ -903,6 +938,7 @@ export type Database = {
           created_at?: string | null
           devoir_id?: string
           eleve_id?: string
+          graded_at?: string | null
           id?: string
           note?: number | null
           note_at?: string | null
@@ -1570,6 +1606,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_class_average: {
+        Args: { p_classe_id: string; p_matiere_id: string; p_period: string }
+        Returns: number
+      }
+      get_teacher_classes: {
+        Args: { p_teacher_id: string }
+        Returns: {
+          classe_id: string
+          classe_nom: string
+          matiere_id: string
+          matiere_nom: string
+        }[]
+      }
       get_user_roles: {
         Args: { _user_id: string }
         Returns: {
