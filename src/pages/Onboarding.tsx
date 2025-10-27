@@ -182,7 +182,24 @@ const Onboarding = () => {
       return;
     }
     
-    setStep(3);
+    setLoading(true);
+    
+    try {
+      // Mettre à jour l'établissement dans user_roles via la fonction RPC
+      const { error } = await supabase.rpc('update_user_etablissement', {
+        _user_id: user.id,
+        _etablissement_id: selectedEtablissement
+      });
+      
+      if (error) throw error;
+      
+      setStep(3);
+    } catch (error: any) {
+      console.error("Erreur mise à jour établissement:", error);
+      toast.error("Erreur lors de la mise à jour de l'établissement");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFinalSubmit = async (e: React.FormEvent) => {

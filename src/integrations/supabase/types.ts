@@ -897,6 +897,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      update_user_etablissement: {
+        Args: { _etablissement_id: string; _user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role:
