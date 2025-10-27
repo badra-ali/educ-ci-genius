@@ -19,25 +19,26 @@ export interface Message {
   author_id: string;
   contenu: string;
   created_at: string;
-  profiles?: {
+  author?: {
     first_name: string;
     last_name: string;
   };
 }
 
-export const useThreads = (coursId?: string) => {
+export const useThreads = () => {
   const [threads, setThreads] = useState<Thread[]>([]);
-  const [currentThread, setCurrentThread] = useState<Thread | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Charger les threads
   const fetchThreads = async (filters?: { coursId?: string }) => {
+    setLoading(true);
     try {
-      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       let query = supabase
         .from("threads")
         .select("*")
+        .contains("participants", [user.id])
         .order("updated_at", { ascending: false });
 
       if (filters?.coursId) {
@@ -46,119 +47,59 @@ export const useThreads = (coursId?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      setThreads(data as any);
-    } catch (error: any) {
-      console.error("Erreur chargement threads:", error);
-      toast.error("Impossible de charger les discussions");
+      setThreads((data as Thread[]) || []);
+    } catch (error) {
+      console.error("Error fetching threads:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Charger un thread spécifique
-  const fetchThread = async (threadId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("threads")
-        .select("*")
-        .eq("id", threadId)
-        .single();
+  useEffect(() => {
+    fetchThreads();
+  }, []);
 
-      if (error) throw error;
-      setCurrentThread(data as any);
-    } catch (error: any) {
-      console.error("Erreur chargement thread:", error);
-      toast.error("Impossible de charger la discussion");
-    }
+  return {
+    threads,
+    loading,
+    fetchThreads,
   };
+};
 
-  // Charger les messages d'un thread
+export const useMessages = (threadId: string) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const fetchMessages = async (threadId: string) => {
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from("messages")
         .select(`
           *,
-          profiles (first_name, last_name)
+          profiles!messages_author_id_fkey(first_name, last_name)
         `)
         .eq("thread_id", threadId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      setMessages(data as any);
-    } catch (error: any) {
-      console.error("Erreur chargement messages:", error);
-      toast.error("Impossible de charger les messages");
-    }
-  };
-
-  // Envoyer un message
-  const sendMessage = async (threadId: string, contenu: string) => {
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Non authentifié");
-
-      const { error } = await supabase
-        .from("messages")
-        .insert({
-          thread_id: threadId,
-          author_id: userData.user.id,
-          contenu,
-        });
-
-      if (error) throw error;
       
-      // Recharger les messages
-      await fetchMessages(threadId);
-      toast.success("Message envoyé");
-    } catch (error: any) {
-      console.error("Erreur envoi message:", error);
-      toast.error("Impossible d'envoyer le message");
+      const typedMessages = (data || []).map((msg: any) => ({
+        ...msg,
+        author: msg.profiles ? {
+          first_name: msg.profiles.first_name,
+          last_name: msg.profiles.last_name,
+        } : undefined
+      }));
+      
+      setMessages(typedMessages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Créer un thread
-  const createThread = async (data: {
-    type: 'cours' | 'direct';
-    titre?: string;
-    cours_id?: string;
-    participants: string[];
-  }) => {
-    try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Non authentifié");
-
-      const { data: userRole } = await supabase
-        .from("user_roles")
-        .select("etablissement_id")
-        .eq("user_id", userData.user.id)
-        .single();
-
-      if (!userRole?.etablissement_id) throw new Error("Établissement non trouvé");
-
-      const { data: thread, error } = await supabase
-        .from("threads")
-        .insert({
-          type: data.type,
-          titre: data.titre,
-          cours_id: data.cours_id,
-          participants: data.participants,
-          etablissement_id: userRole.etablissement_id,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      toast.success("Discussion créée");
-      return thread as Thread;
-    } catch (error: any) {
-      console.error("Erreur création thread:", error);
-      toast.error("Impossible de créer la discussion");
-      return null;
-    }
-  };
-
-  // S'abonner aux nouveaux messages en temps réel
   const subscribeToMessages = (threadId: string) => {
     const channel = supabase
       .channel(`messages:${threadId}`)
@@ -170,8 +111,7 @@ export const useThreads = (coursId?: string) => {
           table: 'messages',
           filter: `thread_id=eq.${threadId}`,
         },
-        (payload) => {
-          console.log('Nouveau message:', payload);
+        () => {
           fetchMessages(threadId);
         }
       )
@@ -182,22 +122,42 @@ export const useThreads = (coursId?: string) => {
     };
   };
 
-  useEffect(() => {
-    if (coursId) {
-      fetchThreads({ coursId });
-    }
-  }, [coursId]);
-
   return {
-    threads,
-    currentThread,
     messages,
     loading,
-    fetchThreads,
-    fetchThread,
     fetchMessages,
-    sendMessage,
-    createThread,
     subscribeToMessages,
+  };
+};
+
+export const useSendMessage = () => {
+  const [sending, setSending] = useState(false);
+
+  const sendMessage = async (threadId: string, content: string) => {
+    setSending(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non authentifié");
+
+      const { error } = await supabase
+        .from("messages")
+        .insert({
+          thread_id: threadId,
+          author_id: user.id,
+          contenu: content,
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error("Error sending message:", error);
+      throw error;
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return {
+    sendMessage,
+    sending,
   };
 };

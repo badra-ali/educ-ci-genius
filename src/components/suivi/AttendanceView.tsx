@@ -6,6 +6,8 @@ import { useMyAttendance, calculateAttendanceStats } from "@/hooks/useSuivi";
 import { UserCheck, Upload } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useState } from "react";
+import { JustificationDialog } from "./JustificationDialog";
 
 const STATUS_CONFIG = {
   PRESENT: { label: "Présent", variant: "default" as const, color: "bg-green-500" },
@@ -15,7 +17,8 @@ const STATUS_CONFIG = {
 
 export const AttendanceView = () => {
   const currentMonth = new Date().toISOString().slice(0, 7);
-  const { data: attendance, isLoading } = useMyAttendance(currentMonth);
+  const { data: attendance, isLoading, refetch } = useMyAttendance(currentMonth);
+  const [selectedAttendanceId, setSelectedAttendanceId] = useState<string | null>(null);
 
   if (isLoading) {
     return <Skeleton className="h-96 w-full" />;
@@ -81,7 +84,11 @@ export const AttendanceView = () => {
                       {STATUS_CONFIG[record.status as keyof typeof STATUS_CONFIG].label}
                     </Badge>
                     {record.status !== 'PRESENT' && !record.justification_url && (
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => setSelectedAttendanceId(record.id)}
+                      >
                         <Upload className="w-4 h-4 mr-2" />
                         Justifier
                       </Button>
@@ -98,10 +105,12 @@ export const AttendanceView = () => {
           )}
         </div>
 
-        <Button variant="outline" className="w-full">
-          <Upload className="w-4 h-4 mr-2" />
-          Soumettre un justificatif
-        </Button>
+        <JustificationDialog
+          open={!!selectedAttendanceId}
+          onOpenChange={(open) => !open && setSelectedAttendanceId(null)}
+          attendanceId={selectedAttendanceId || ''}
+          onSuccess={() => refetch()}
+        />
       </CardContent>
     </Card>
   );

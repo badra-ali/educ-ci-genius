@@ -6,14 +6,15 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Loader2 } from "lucide-react";
-import { useThreads } from "@/hooks/useThreads";
+import { useThreads, useMessages, useSendMessage } from "@/hooks/useThreads";
 import { supabase } from "@/integrations/supabase/client";
 
 const Forum = () => {
   const { coursId } = useParams<{ coursId: string }>();
-  const { threads, messages, loading, fetchThreads, fetchThread, fetchMessages, sendMessage, subscribeToMessages } = useThreads(coursId);
+  const { threads, loading, fetchThreads } = useThreads();
+  const { messages, fetchMessages, subscribeToMessages } = useMessages(threads[0]?.id || '');
+  const { sendMessage, sending: sendingMessage } = useSendMessage();
   const [newMessage, setNewMessage] = useState("");
-  const [sending, setSending] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string>("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -49,10 +50,12 @@ const Forum = () => {
     e.preventDefault();
     if (!newMessage.trim() || !threads[0]?.id) return;
 
-    setSending(true);
-    await sendMessage(threads[0].id, newMessage);
-    setNewMessage("");
-    setSending(false);
+    try {
+      await sendMessage(threads[0].id, newMessage);
+      setNewMessage("");
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   };
 
   const getInitials = (firstName?: string, lastName?: string) => {
@@ -94,13 +97,13 @@ const Forum = () => {
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="text-xs">
-                      {getInitials(message.profiles?.first_name, message.profiles?.last_name)}
+                      {getInitials(message.author?.first_name, message.author?.last_name)}
                     </AvatarFallback>
                   </Avatar>
                   <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-[70%]`}>
                     <div className="flex items-baseline gap-2 mb-1">
                       <span className="text-xs font-medium">
-                        {message.profiles?.first_name} {message.profiles?.last_name}
+                        {message.author?.first_name} {message.author?.last_name}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {new Date(message.created_at).toLocaleTimeString('fr-FR', {
@@ -130,11 +133,11 @@ const Forum = () => {
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Tapez votre message..."
-              disabled={sending}
+              disabled={sendingMessage}
               className="flex-1"
             />
-            <Button type="submit" disabled={sending || !newMessage.trim()}>
-              {sending ? (
+            <Button type="submit" disabled={sendingMessage || !newMessage.trim()}>
+              {sendingMessage ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <Send className="w-4 h-4" />

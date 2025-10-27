@@ -1,16 +1,24 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { MessageSquare } from "lucide-react";
 import { useThreads } from "@/hooks/useThreads";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useState } from "react";
+import { ThreadView } from "./ThreadView";
 
 export const MessagingView = () => {
   const { threads, loading } = useThreads();
+  const [selectedThreadId, setSelectedThreadId] = useState<string | null>(null);
 
   if (loading) {
     return <Skeleton className="h-96 w-full" />;
+  }
+
+  if (selectedThreadId) {
+    return <ThreadView threadId={selectedThreadId} onBack={() => setSelectedThreadId(null)} />;
   }
 
   return (
@@ -41,15 +49,21 @@ export const MessagingView = () => {
                 <div
                   key={thread.id}
                   className="p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                  onClick={() => setSelectedThreadId(thread.id)}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium">{thread.titre || "Conversation"}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{thread.titre || "Conversation"}</p>
+                      <Badge variant={thread.type === 'cours' ? 'default' : 'secondary'}>
+                        {thread.type === 'cours' ? 'Cours' : 'Privé'}
+                      </Badge>
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       {format(new Date(thread.updated_at), "d MMM", { locale: fr })}
                     </p>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2">
-                    {thread.type === 'cours' ? "Discussion de cours" : "Message privé"}
+                    Cliquez pour voir la conversation
                   </p>
                 </div>
               ))}
