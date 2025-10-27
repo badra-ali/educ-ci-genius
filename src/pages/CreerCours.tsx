@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Plus, Trash2, Loader2 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { ArrowLeft, Plus, Trash2, Loader2, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCours } from "@/hooks/useCours";
 import { toast } from "sonner";
@@ -308,6 +309,105 @@ const CreerCours = () => {
                   ))}
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Objectifs et Prérequis */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Objectifs et Prérequis</CardTitle>
+              <CardDescription>
+                Définissez les objectifs pédagogiques et les prérequis nécessaires
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="multiple" className="w-full">
+                <AccordionItem value="objectifs">
+                  <AccordionTrigger>Objectifs pédagogiques</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2 pt-2">
+                      {objectifs.map((objectif, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Input
+                            placeholder="Ex: Comprendre la notion d'équation"
+                            value={objectif}
+                            onChange={(e) => {
+                              const newObjectifs = [...objectifs];
+                              newObjectifs[index] = e.target.value;
+                              setObjectifs(newObjectifs);
+                            }}
+                          />
+                          {objectifs.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setObjectifs(objectifs.filter((_, i) => i !== index));
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setObjectifs([...objectifs, ""])}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Ajouter un objectif
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="prerequis">
+                  <AccordionTrigger>Prérequis</AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2 pt-2">
+                      {prerequis.map((prereq, index) => (
+                        <div key={index} className="flex gap-2">
+                          <Input
+                            placeholder="Ex: Opérations de base"
+                            value={prereq}
+                            onChange={(e) => {
+                              const newPrerequis = [...prerequis];
+                              newPrerequis[index] = e.target.value;
+                              setPrerequis(newPrerequis);
+                            }}
+                          />
+                          {prerequis.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setPrerequis(prerequis.filter((_, i) => i !== index));
+                              }}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setPrerequis([...prerequis, ""])}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Ajouter un prérequis
+                      </Button>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </CardContent>
           </Card>
 
