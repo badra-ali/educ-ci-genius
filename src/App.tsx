@@ -26,6 +26,7 @@ import Bibliotheque from "./pages/Bibliotheque";
 import { ResourceReader } from "./components/library/ResourceReader";
 import TuteurIA from "./pages/TuteurIA";
 import Relations from "./pages/Relations";
+import StudentDashboard from "./pages/StudentDashboard";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -170,6 +171,16 @@ const App = () => (
                 <ProtectedRoute>
                   <RoleGate allowedRoles={["ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
                     <Relations />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/student"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ELEVE"]}>
+                    <StudentDashboard />
                   </RoleGate>
                 </ProtectedRoute>
               }

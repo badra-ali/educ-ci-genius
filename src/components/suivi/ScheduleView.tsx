@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "lucide-react";
 import { useMySchedule } from "@/hooks/useSuivi";
+import { ScheduleExport } from "./ScheduleExport";
 
 const DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"];
 
@@ -35,6 +36,9 @@ export const ScheduleView = () => {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end mb-4">
+        <ScheduleExport />
+      </div>
       {DAYS.map((day) => (
         <Card key={day}>
           <CardHeader className="pb-3">
