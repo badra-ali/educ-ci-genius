@@ -39,6 +39,12 @@ const Dashboard = () => {
           .single();
         
         setProfile(profileData);
+        
+        // Vérifier si l'onboarding est complété
+        if (!profileData?.onboarding_completed) {
+          navigate("/onboarding");
+          return;
+        }
       }
       setLoading(false);
     };

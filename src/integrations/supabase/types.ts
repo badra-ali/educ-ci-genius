@@ -53,6 +53,130 @@ export type Database = {
         }
         Relationships: []
       }
+      classes: {
+        Row: {
+          actif: boolean | null
+          annee_scolaire: string
+          capacite_max: number | null
+          created_at: string | null
+          etablissement_id: string
+          id: string
+          niveau: string
+          nom: string
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean | null
+          annee_scolaire?: string
+          capacite_max?: number | null
+          created_at?: string | null
+          etablissement_id: string
+          id?: string
+          niveau: string
+          nom: string
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean | null
+          annee_scolaire?: string
+          capacite_max?: number | null
+          created_at?: string | null
+          etablissement_id?: string
+          id?: string
+          niveau?: string
+          nom?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eleve_classes: {
+        Row: {
+          actif: boolean | null
+          annee_scolaire: string
+          classe_id: string
+          date_inscription: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          actif?: boolean | null
+          annee_scolaire?: string
+          classe_id: string
+          date_inscription?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          actif?: boolean | null
+          annee_scolaire?: string
+          classe_id?: string
+          date_inscription?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eleve_classes_classe_id_fkey"
+            columns: ["classe_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      enseignant_matieres: {
+        Row: {
+          annee_scolaire: string
+          classe_id: string | null
+          created_at: string | null
+          id: string
+          matiere_id: string
+          principal: boolean | null
+          user_id: string
+        }
+        Insert: {
+          annee_scolaire?: string
+          classe_id?: string | null
+          created_at?: string | null
+          id?: string
+          matiere_id: string
+          principal?: boolean | null
+          user_id: string
+        }
+        Update: {
+          annee_scolaire?: string
+          classe_id?: string | null
+          created_at?: string | null
+          id?: string
+          matiere_id?: string
+          principal?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "enseignant_matieres_classe_id_fkey"
+            columns: ["classe_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "enseignant_matieres_matiere_id_fkey"
+            columns: ["matiere_id"]
+            isOneToOne: false
+            referencedRelation: "matieres"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       etablissements: {
         Row: {
           actif: boolean | null
@@ -98,26 +222,112 @@ export type Database = {
         }
         Relationships: []
       }
+      matieres: {
+        Row: {
+          actif: boolean | null
+          code: string | null
+          coefficient: number | null
+          couleur: string | null
+          created_at: string | null
+          etablissement_id: string
+          id: string
+          niveau: string
+          nom: string
+          updated_at: string | null
+        }
+        Insert: {
+          actif?: boolean | null
+          code?: string | null
+          coefficient?: number | null
+          couleur?: string | null
+          created_at?: string | null
+          etablissement_id: string
+          id?: string
+          niveau: string
+          nom: string
+          updated_at?: string | null
+        }
+        Update: {
+          actif?: boolean | null
+          code?: string | null
+          coefficient?: number | null
+          couleur?: string | null
+          created_at?: string | null
+          etablissement_id?: string
+          id?: string
+          niveau?: string
+          nom?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matieres_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      parent_eleves: {
+        Row: {
+          contact_prioritaire: boolean | null
+          created_at: string | null
+          eleve_id: string
+          id: string
+          lien_parente: string
+          parent_id: string
+        }
+        Insert: {
+          contact_prioritaire?: boolean | null
+          created_at?: string | null
+          eleve_id: string
+          id?: string
+          lien_parente: string
+          parent_id: string
+        }
+        Update: {
+          contact_prioritaire?: boolean | null
+          created_at?: string | null
+          eleve_id?: string
+          id?: string
+          lien_parente?: string
+          parent_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
+          date_naissance: string | null
           first_name: string
           id: string
           last_name: string
+          onboarding_completed: boolean | null
+          phone: string | null
           updated_at: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
+          date_naissance?: string | null
           first_name: string
           id: string
           last_name: string
+          onboarding_completed?: boolean | null
+          phone?: string | null
           updated_at?: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
+          date_naissance?: string | null
           first_name?: string
           id?: string
           last_name?: string
+          onboarding_completed?: boolean | null
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []

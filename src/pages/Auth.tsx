@@ -9,8 +9,34 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { GraduationCap, Loader2 } from "lucide-react";
+import { z } from "zod";
 
 type UserRole = "ELEVE" | "ENSEIGNANT" | "PARENT" | "ADMIN_ECOLE";
+
+// Schémas de validation
+const signUpSchema = z.object({
+  email: z.string().trim().email({ message: "Adresse email invalide" }).max(255),
+  password: z.string().min(8, { message: "Le mot de passe doit contenir au moins 8 caractères" }).max(100),
+  firstName: z.string().trim().min(1, { message: "Le prénom est requis" }).max(100),
+  lastName: z.string().trim().min(1, { message: "Le nom est requis" }).max(100),
+  role: z.enum(['ELEVE', 'ENSEIGNANT', 'PARENT', 'ADMIN_ECOLE'])
+});
+
+const signInSchema = z.object({
+  email: z.string().trim().email({ message: "Adresse email invalide" }).max(255),
+  password: z.string().min(1, { message: "Le mot de passe est requis" })
+});
+
+// Gérer les erreurs d'authentification de manière sécurisée
+const handleAuthError = (error: any): string => {
+  if (error.message?.includes('Invalid login') || error.message?.includes('User not found') || error.message?.includes('Invalid email or password')) {
+    return "Email ou mot de passe incorrect";
+  }
+  if (error.message?.includes('already registered') || error.message?.includes('already exists')) {
+    return "Impossible de créer le compte. Veuillez réessayer ou contacter le support.";
+  }
+  return "Une erreur est survenue. Veuillez réessayer.";
+};
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -23,12 +49,19 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const validation = signInSchema.safeParse({ email, password });
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: validation.data.email,
+        password: validation.data.password,
       });
 
       if (error) throw error;
@@ -36,7 +69,8 @@ const Auth = () => {
       toast.success("Connexion réussie !");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Erreur de connexion");
+      console.error("Erreur de connexion:", error.message);
+      toast.error(handleAuthError(error));
     } finally {
       setIsLoading(false);
     }
@@ -44,18 +78,32 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const validation = signUpSchema.safeParse({
+      email,
+      password,
+      firstName,
+      lastName,
+      role,
+    });
+    
+    if (!validation.success) {
+      toast.error(validation.error.errors[0].message);
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
       const { error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: validation.data.email,
+        password: validation.data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${window.location.origin}/`,
           data: {
-            first_name: firstName,
-            last_name: lastName,
-            role: role,
+            first_name: validation.data.firstName,
+            last_name: validation.data.lastName,
+            role: validation.data.role,
           },
         },
       });
@@ -63,8 +111,13 @@ const Auth = () => {
       if (error) throw error;
 
       toast.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.");
+      setEmail("");
+      setPassword("");
+      setFirstName("");
+      setLastName("");
     } catch (error: any) {
-      toast.error(error.message || "Erreur lors de l'inscription");
+      console.error("Erreur d'inscription:", error.message);
+      toast.error(handleAuthError(error));
     } finally {
       setIsLoading(false);
     }
