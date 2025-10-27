@@ -9,9 +9,12 @@ import Dashboard from "./pages/Dashboard";
 import Onboarding from "./pages/Onboarding";
 import ListeCours from "./pages/ListeCours";
 import CoursDetail from "./pages/CoursDetail";
-import PasserQcm from "./pages/PasserQcm";
 import CreerCours from "./pages/CreerCours";
+import CreerQcm from "./pages/CreerQcm";
+import PasserQcm from "./pages/PasserQcm";
 import DevoirDetail from "./pages/DevoirDetail";
+import CorrigerDevoir from "./pages/CorrigerDevoir";
+import Forum from "./pages/Forum";
 import Suivi from "./pages/Suivi";
 import Bibliotheque from "./pages/Bibliotheque";
 import TuteurIA from "./pages/TuteurIA";
@@ -33,8 +36,11 @@ const App = () => (
           <Route path="/classe" element={<ListeCours />} />
           <Route path="/classe/:id" element={<CoursDetail />} />
           <Route path="/cours/new" element={<CreerCours />} />
+          <Route path="/qcm/new" element={<CreerQcm />} />
           <Route path="/qcm/:id/passer" element={<PasserQcm />} />
           <Route path="/devoir/:id" element={<DevoirDetail />} />
+          <Route path="/devoir/:id/corriger" element={<CorrigerDevoir />} />
+          <Route path="/forum/:coursId" element={<Forum />} />
           <Route path="/suivi" element={<Suivi />} />
           <Route path="/bibliotheque" element={<Bibliotheque />} />
           <Route path="/tuteur-ia" element={<TuteurIA />} />

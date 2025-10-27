@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { ArrowLeft, Video, MessageSquare, FileText, ClipboardList, ExternalLink 
 import { useCours } from "@/hooks/useCours";
 import { useQcm } from "@/hooks/useQcm";
 import { useDevoirs } from "@/hooks/useDevoirs";
-import { useUserRole } from "@/hooks/useUserRole";
+import Forum from "./Forum";
 
 const CoursDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +16,6 @@ const CoursDetail = () => {
   const { cours, loading: coursLoading, fetchCours } = useCours(id);
   const { qcmList, fetchQcmList } = useQcm();
   const { devoirsList, fetchDevoirsList } = useDevoirs();
-  const { primaryRole } = useUserRole();
 
   useEffect(() => {
     if (id) {
@@ -318,22 +317,7 @@ const CoursDetail = () => {
 
           {/* FORUM */}
           <TabsContent value="forum">
-            <Card>
-              <CardHeader>
-                <CardTitle>Forum de discussion</CardTitle>
-                <CardDescription>
-                  Échangez avec votre enseignant et vos camarades
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="py-12 text-center">
-                  <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-muted-foreground">
-                    Le forum sera disponible prochainement
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <Forum />
           </TabsContent>
         </Tabs>
       </main>
