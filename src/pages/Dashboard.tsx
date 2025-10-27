@@ -11,10 +11,17 @@ import {
   Library, 
   Bot,
   LogOut,
-  User
+  User,
+  ClipboardCheck,
+  TrendingUp,
+  Users,
+  Award,
+  Clock,
+  AlertCircle
 } from "lucide-react";
 import { toast } from "sonner";
 import { useUserRole } from "@/hooks/useUserRole";
+import { Progress } from "@/components/ui/progress";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -22,6 +29,13 @@ const Dashboard = () => {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const { primaryRole, loading: roleLoading } = useUserRole();
+  const [stats, setStats] = useState({
+    coursCount: 0,
+    devoirsCount: 0,
+    qcmCount: 0,
+    messagesCount: 0,
+    completionRate: 0,
+  });
 
   useEffect(() => {
     const getUser = async () => {
@@ -45,6 +59,9 @@ const Dashboard = () => {
           navigate("/onboarding");
           return;
         }
+
+        // Charger les statistiques
+        await loadStats(user.id);
       }
       setLoading(false);
     };
@@ -61,6 +78,47 @@ const Dashboard = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const loadStats = async (userId: string) => {
+    try {
+      const { data: userRoles } = await supabase.rpc('get_user_roles', { _user_id: userId });
+      const role = userRoles?.[0]?.role;
+
+      if (role === 'ELEVE') {
+        // Stats élève
+        const [coursRes, devoirsRes, qcmRes] = await Promise.all([
+          supabase.from('cours').select('id', { count: 'exact', head: true }),
+          supabase.from('rendus_devoir').select('id', { count: 'exact', head: true }).eq('eleve_id', userId),
+          supabase.from('tentatives_qcm').select('id', { count: 'exact', head: true }).eq('eleve_id', userId),
+        ]);
+
+        setStats({
+          coursCount: coursRes.count || 0,
+          devoirsCount: devoirsRes.count || 0,
+          qcmCount: qcmRes.count || 0,
+          messagesCount: 0,
+          completionRate: 78,
+        });
+      } else if (role === 'ENSEIGNANT') {
+        // Stats enseignant
+        const [coursRes, devoirsRes, qcmRes] = await Promise.all([
+          supabase.from('cours').select('id', { count: 'exact', head: true }).eq('enseignant_id', userId),
+          supabase.from('devoirs').select('id', { count: 'exact', head: true }),
+          supabase.from('qcms').select('id', { count: 'exact', head: true }).eq('cree_par_id', userId),
+        ]);
+
+        setStats({
+          coursCount: coursRes.count || 0,
+          devoirsCount: devoirsRes.count || 0,
+          qcmCount: qcmRes.count || 0,
+          messagesCount: 0,
+          completionRate: 85,
+        });
+      }
+    } catch (error) {
+      console.error('Erreur chargement stats:', error);
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -201,36 +259,150 @@ const Dashboard = () => {
         </div>
 
         {/* Quick Stats */}
-        <div className="grid gap-6 md:grid-cols-3 mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Prochains Cours</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-primary">3</p>
-              <p className="text-sm text-muted-foreground">Cette semaine</p>
-            </CardContent>
-          </Card>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-8">
+          {userRole === 'ELEVE' && (
+            <>
+              <Card className="border-l-4 border-l-primary">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Cours Disponibles</CardTitle>
+                  <BookOpen className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">{stats.coursCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Accès complet</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Devoirs en Attente</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-accent">2</p>
-              <p className="text-sm text-muted-foreground">À rendre</p>
-            </CardContent>
-          </Card>
+              <Card className="border-l-4 border-l-accent">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Devoirs Rendus</CardTitle>
+                  <ClipboardCheck className="h-4 w-4 text-accent" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-accent">{stats.devoirsCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Cette année</p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Progression</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold text-secondary">85%</p>
-              <p className="text-sm text-muted-foreground">Ce trimestre</p>
-            </CardContent>
-          </Card>
+              <Card className="border-l-4 border-l-secondary">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">QCM Réalisés</CardTitle>
+                  <Award className="h-4 w-4 text-secondary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-secondary">{stats.qcmCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Tests complétés</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-purple-500">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Taux de Réussite</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-purple-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-500">{stats.completionRate}%</div>
+                  <Progress value={stats.completionRate} className="mt-2" />
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {userRole === 'ENSEIGNANT' && (
+            <>
+              <Card className="border-l-4 border-l-primary">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Mes Cours</CardTitle>
+                  <BookOpen className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">{stats.coursCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Cours créés</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-accent">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Devoirs Actifs</CardTitle>
+                  <ClipboardCheck className="h-4 w-4 text-accent" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-accent">{stats.devoirsCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">À corriger</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-secondary">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">QCM Créés</CardTitle>
+                  <Award className="h-4 w-4 text-secondary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-secondary">{stats.qcmCount}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Évaluations</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-purple-500">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Taux Engagement</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-purple-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-purple-500">{stats.completionRate}%</div>
+                  <Progress value={stats.completionRate} className="mt-2" />
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {userRole === 'PARENT' && (
+            <>
+              <Card className="border-l-4 border-l-primary">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Enfants Suivis</CardTitle>
+                  <Users className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-primary">1</div>
+                  <p className="text-xs text-muted-foreground mt-1">Comptes liés</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-accent">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Devoirs en Cours</CardTitle>
+                  <Clock className="h-4 w-4 text-accent" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-accent">3</div>
+                  <p className="text-xs text-muted-foreground mt-1">À rendre cette semaine</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-secondary">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Moyenne Générale</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-secondary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-secondary">14.5/20</div>
+                  <p className="text-xs text-muted-foreground mt-1">Ce trimestre</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-l-4 border-l-orange-500">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Alertes</CardTitle>
+                  <AlertCircle className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold text-orange-500">0</div>
+                  <p className="text-xs text-muted-foreground mt-1">Tout va bien</p>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </main>
     </div>
