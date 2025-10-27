@@ -5,10 +5,10 @@ import { useNavigate } from "react-router-dom";
 import { BookOpen, Calendar, GraduationCap, Library, Bot, ArrowRight, CheckCircle2 } from "lucide-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useRef } from "react";
-import heroImage1 from "@/assets/hero-1.jpg";
-import heroImage2 from "@/assets/hero-2.jpg";
-import heroImage3 from "@/assets/hero-3.jpg";
-import heroImage4 from "@/assets/hero-4.jpg";
+import moduleClasse from "@/assets/module-classe.jpg";
+import moduleSuivi from "@/assets/module-suivi.jpg";
+import moduleBibliotheque from "@/assets/module-bibliotheque.jpg";
+import moduleTuteurIA from "@/assets/module-tuteur-ia.jpg";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -16,11 +16,31 @@ const Index = () => {
     Autoplay({ delay: 5000, stopOnInteraction: false })
   );
 
-  const heroImages = [
-    { src: heroImage1, alt: "Étudiants utilisant des tablettes en classe" },
-    { src: heroImage2, alt: "Enseignante présentant sur tableau interactif" },
-    { src: heroImage3, alt: "Étudiants consultant des ressources numériques" },
-    { src: heroImage4, alt: "Étudiant utilisant le tuteur IA" },
+  const heroSlides = [
+    { 
+      src: moduleClasse, 
+      alt: "Classe Virtuelle",
+      title: "Classe Virtuelle",
+      description: "Cours interactifs, QCM en temps réel et devoirs collaboratifs pour un apprentissage engageant"
+    },
+    { 
+      src: moduleSuivi, 
+      alt: "Suivi Scolaire",
+      title: "Suivi Scolaire Complet",
+      description: "Notes, emploi du temps, assiduité et bulletins - Tout pour suivre la progression de vos élèves"
+    },
+    { 
+      src: moduleBibliotheque, 
+      alt: "Bibliothèque Numérique",
+      title: "Bibliothèque Numérique",
+      description: "Milliers de ressources pédagogiques avec lecture audio pour un accès universel au savoir"
+    },
+    { 
+      src: moduleTuteurIA, 
+      alt: "Tuteur IA Intelligent",
+      title: "Tuteur IA Multilingue",
+      description: "Assistant intelligent qui répond aux questions et accompagne chaque élève personnellement"
+    },
   ];
 
   const features = [
@@ -73,12 +93,12 @@ const Index = () => {
           }}
         >
           <CarouselContent>
-            {heroImages.map((image, index) => (
+            {heroSlides.map((slide, index) => (
               <CarouselItem key={index}>
                 <div className="relative h-[600px] md:h-[700px]">
                   <img
-                    src={image.src}
-                    alt={image.alt}
+                    src={slide.src}
+                    alt={slide.alt}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/90 via-primary/70 to-transparent">
@@ -87,15 +107,16 @@ const Index = () => {
                         <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-6">
                           <GraduationCap className="w-10 h-10" />
                         </div>
-                        <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-                          IA ÉDU.CI
+                        <div className="mb-4">
+                          <span className="inline-block px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-4">
+                            Module {index + 1}/4
+                          </span>
+                        </div>
+                        <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">
+                          {slide.title}
                         </h1>
-                        <p className="text-xl md:text-2xl mb-8 text-white/90">
-                          L'avenir de l'éducation intelligente en Côte d'Ivoire
-                        </p>
-                        <p className="text-lg mb-10 text-white/80 max-w-2xl">
-                          Une super-application éducative qui regroupe classe virtuelle, suivi scolaire,
-                          bibliothèque numérique et tuteur IA pour révolutionner l'apprentissage
+                        <p className="text-xl md:text-2xl mb-8 text-white/90 leading-relaxed">
+                          {slide.description}
                         </p>
                         <div className="flex gap-4 flex-wrap">
                           <Button
