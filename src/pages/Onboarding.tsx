@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { GraduationCap, Building2, Users, BookOpen, Loader2, Search } from "lucide-react";
+import { GraduationCap, Building2, Users, BookOpen, Loader2, Search, Plus } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -30,6 +31,14 @@ const Onboarding = () => {
   const [selectedEleve, setSelectedEleve] = useState("");
   const [lienParente, setLienParente] = useState("");
   const [openEleveCombobox, setOpenEleveCombobox] = useState(false);
+  const [openAddEleveDialog, setOpenAddEleveDialog] = useState(false);
+  const [newEleveData, setNewEleveData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    dateNaissance: "",
+  });
   
   // Listes de données
   const [etablissements, setEtablissements] = useState<any[]>([]);
@@ -200,6 +209,69 @@ const Onboarding = () => {
     } catch (error: any) {
       console.error("Erreur mise à jour établissement:", error);
       toast.error("Erreur lors de la mise à jour de l'établissement");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddEleve = async () => {
+    if (!newEleveData.firstName || !newEleveData.lastName || !newEleveData.email || !newEleveData.password) {
+      toast.error("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Créer le compte de l'élève
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: newEleveData.email,
+        password: newEleveData.password,
+        options: {
+          data: {
+            first_name: newEleveData.firstName,
+            last_name: newEleveData.lastName,
+            role: 'ELEVE'
+          }
+        }
+      });
+
+      if (signUpError) throw signUpError;
+
+      if (!authData.user) {
+        throw new Error("Erreur lors de la création du compte");
+      }
+
+      // Mettre à jour le profil avec la date de naissance si fournie
+      if (newEleveData.dateNaissance) {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ date_naissance: newEleveData.dateNaissance })
+          .eq("id", authData.user.id);
+        
+        if (profileError) console.error("Erreur mise à jour date naissance:", profileError);
+      }
+
+      // Ajouter l'élève à la liste
+      const newEleve = {
+        id: authData.user.id,
+        first_name: newEleveData.firstName,
+        last_name: newEleveData.lastName,
+      };
+      setEleves([...eleves, newEleve]);
+      setSelectedEleve(authData.user.id);
+      
+      toast.success("Élève ajouté avec succès");
+      setOpenAddEleveDialog(false);
+      setNewEleveData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        dateNaissance: "",
+      });
+    } catch (error: any) {
+      console.error("Erreur création élève:", error);
+      toast.error(error.message || "Erreur lors de la création de l'élève");
     } finally {
       setLoading(false);
     }
@@ -443,7 +515,82 @@ const Onboarding = () => {
               {primaryRole === 'PARENT' && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="eleve">Sélectionnez votre enfant</Label>
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="eleve">Sélectionnez votre enfant</Label>
+                      <Dialog open={openAddEleveDialog} onOpenChange={setOpenAddEleveDialog}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm" type="button">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Ajouter un élève
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Créer un compte élève</DialogTitle>
+                            <DialogDescription>
+                              Si votre enfant n'a pas encore de compte, créez-le ici.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="newFirstName">Prénom *</Label>
+                              <Input
+                                id="newFirstName"
+                                value={newEleveData.firstName}
+                                onChange={(e) => setNewEleveData({...newEleveData, firstName: e.target.value})}
+                                placeholder="Prénom de l'élève"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="newLastName">Nom *</Label>
+                              <Input
+                                id="newLastName"
+                                value={newEleveData.lastName}
+                                onChange={(e) => setNewEleveData({...newEleveData, lastName: e.target.value})}
+                                placeholder="Nom de l'élève"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="newEmail">Email *</Label>
+                              <Input
+                                id="newEmail"
+                                type="email"
+                                value={newEleveData.email}
+                                onChange={(e) => setNewEleveData({...newEleveData, email: e.target.value})}
+                                placeholder="email@exemple.com"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="newPassword">Mot de passe *</Label>
+                              <Input
+                                id="newPassword"
+                                type="password"
+                                value={newEleveData.password}
+                                onChange={(e) => setNewEleveData({...newEleveData, password: e.target.value})}
+                                placeholder="Minimum 6 caractères"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="newDateNaissance">Date de naissance</Label>
+                              <Input
+                                id="newDateNaissance"
+                                type="date"
+                                value={newEleveData.dateNaissance}
+                                onChange={(e) => setNewEleveData({...newEleveData, dateNaissance: e.target.value})}
+                              />
+                            </div>
+                          </div>
+                          <DialogFooter>
+                            <Button variant="outline" onClick={() => setOpenAddEleveDialog(false)} type="button">
+                              Annuler
+                            </Button>
+                            <Button onClick={handleAddEleve} disabled={loading} type="button">
+                              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Créer l'élève"}
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                     <Popover open={openEleveCombobox} onOpenChange={setOpenEleveCombobox}>
                       <PopoverTrigger asChild>
                         <Button
