@@ -92,33 +92,45 @@ const CreerCours = () => {
       .from("user_roles")
       .select("etablissement_id")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
     if (userRoles?.etablissement_id) {
       setEtablissementId(userRoles.etablissement_id);
       fetchMatieres(userRoles.etablissement_id);
       fetchClasses(userRoles.etablissement_id);
+    } else {
+      // Si pas d'établissement, charger toutes les matières et classes
+      fetchMatieres();
+      fetchClasses();
     }
   };
 
-  const fetchMatieres = async (etablissementId: string) => {
-    const { data } = await supabase
+  const fetchMatieres = async (etablissementId?: string) => {
+    let query = supabase
       .from("matieres")
-      .select("*")
-      .eq("etablissement_id", etablissementId)
-      .eq("actif", true)
-      .order("nom");
+      .select("*, etablissements(nom)")
+      .eq("actif", true);
+    
+    if (etablissementId) {
+      query = query.eq("etablissement_id", etablissementId);
+    }
+    
+    const { data } = await query.order("nom");
     
     setMatieres(data || []);
   };
 
-  const fetchClasses = async (etablissementId: string) => {
-    const { data } = await supabase
+  const fetchClasses = async (etablissementId?: string) => {
+    let query = supabase
       .from("classes")
-      .select("*")
-      .eq("etablissement_id", etablissementId)
-      .eq("actif", true)
-      .order("niveau, nom");
+      .select("*, etablissements(nom)")
+      .eq("actif", true);
+    
+    if (etablissementId) {
+      query = query.eq("etablissement_id", etablissementId);
+    }
+    
+    const { data } = await query.order("niveau, nom");
     
     setClasses(data || []);
   };
@@ -265,9 +277,9 @@ const CreerCours = () => {
                       <SelectValue placeholder="Sélectionner" />
                     </SelectTrigger>
                     <SelectContent>
-                      {matieres.map((m) => (
+                      {matieres.map((m: any) => (
                         <SelectItem key={m.id} value={m.id}>
-                          {m.nom}
+                          {m.nom} {m.etablissements?.nom && `(${m.etablissements.nom})`}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -289,7 +301,7 @@ const CreerCours = () => {
               <div className="space-y-2">
                 <Label>Classes concernées *</Label>
                 <div className="border rounded-md p-4 space-y-2 max-h-40 overflow-y-auto">
-                  {classes.map((classe) => (
+                  {classes.map((classe: any) => (
                     <div key={classe.id} className="flex items-center space-x-2">
                       <Checkbox
                         id={classe.id}
@@ -303,7 +315,7 @@ const CreerCours = () => {
                         }}
                       />
                       <label htmlFor={classe.id} className="text-sm cursor-pointer">
-                        {classe.niveau} - {classe.nom}
+                        {classe.niveau} - {classe.nom} {classe.etablissements?.nom && `(${classe.etablissements.nom})`}
                       </label>
                     </div>
                   ))}
