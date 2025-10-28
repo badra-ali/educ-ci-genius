@@ -27,6 +27,15 @@ import { ResourceReader } from "./components/library/ResourceReader";
 import TuteurIA from "./pages/TuteurIA";
 import Relations from "./pages/Relations";
 import StudentDashboard from "./pages/StudentDashboard";
+import ParentDashboard from "./pages/ParentDashboard";
+import ParentGrades from "./pages/ParentGrades";
+import ParentAttendance from "./pages/ParentAttendance";
+import ParentSchedule from "./pages/ParentSchedule";
+import ParentMessages from "./pages/ParentMessages";
+import AdminDashboard from "./pages/AdminDashboard";
+import AdminUtilisateurs from "./pages/AdminUtilisateurs";
+import AdminClasses from "./pages/AdminClasses";
+import AdminAssiduite from "./pages/AdminAssiduite";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -181,6 +190,100 @@ const App = () => (
                 <ProtectedRoute>
                   <RoleGate allowedRoles={["ELEVE"]}>
                     <StudentDashboard />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Parent routes */}
+            <Route
+              path="/app/parent"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["PARENT"]}>
+                    <ParentDashboard />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/parent/notes/:childId"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["PARENT"]}>
+                    <ParentGrades />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/parent/assiduite/:childId"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["PARENT"]}>
+                    <ParentAttendance />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/parent/emploi-du-temps/:childId"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["PARENT"]}>
+                    <ParentSchedule />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/parent/messages"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["PARENT"]}>
+                    <ParentMessages />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            
+            {/* Admin routes */}
+            <Route
+              path="/app/admin"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <AdminDashboard />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/admin/utilisateurs"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <AdminUtilisateurs />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/admin/classes"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <AdminClasses />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/admin/assiduite"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <AdminAssiduite />
                   </RoleGate>
                 </ProtectedRoute>
               }
