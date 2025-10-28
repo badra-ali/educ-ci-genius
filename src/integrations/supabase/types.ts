@@ -1588,6 +1588,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          language: string
           metadata: Json | null
           mode: string | null
           role: string
@@ -1597,6 +1598,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          language?: string
           metadata?: Json | null
           mode?: string | null
           role: string
@@ -1606,6 +1608,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          language?: string
           metadata?: Json | null
           mode?: string | null
           role?: string
@@ -1627,6 +1630,9 @@ export type Database = {
           grade: string | null
           id: string
           language: string
+          metadata: Json
+          mode: string
+          subject: string | null
           title: string | null
           updated_at: string
           user_id: string
@@ -1636,6 +1642,9 @@ export type Database = {
           grade?: string | null
           id?: string
           language?: string
+          metadata?: Json
+          mode?: string
+          subject?: string | null
           title?: string | null
           updated_at?: string
           user_id: string
@@ -1645,6 +1654,9 @@ export type Database = {
           grade?: string | null
           id?: string
           language?: string
+          metadata?: Json
+          mode?: string
+          subject?: string | null
           title?: string | null
           updated_at?: string
           user_id?: string
