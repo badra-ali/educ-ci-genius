@@ -535,11 +535,50 @@ export type Database = {
           },
         ]
       }
+      etab_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          etablissement_id: string
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          etablissement_id: string
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          etablissement_id?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "etab_settings_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       etablissements: {
         Row: {
           actif: boolean | null
           adresse: string | null
           code: string | null
+          contact: Json | null
           created_at: string
           email: string | null
           id: string
@@ -549,11 +588,13 @@ export type Database = {
           params: Json | null
           telephone: string | null
           updated_at: string
+          ville: string | null
         }
         Insert: {
           actif?: boolean | null
           adresse?: string | null
           code?: string | null
+          contact?: Json | null
           created_at?: string
           email?: string | null
           id?: string
@@ -563,11 +604,13 @@ export type Database = {
           params?: Json | null
           telephone?: string | null
           updated_at?: string
+          ville?: string | null
         }
         Update: {
           actif?: boolean | null
           adresse?: string | null
           code?: string | null
+          contact?: Json | null
           created_at?: string
           email?: string | null
           id?: string
@@ -577,6 +620,7 @@ export type Database = {
           params?: Json | null
           telephone?: string | null
           updated_at?: string
+          ville?: string | null
         }
         Relationships: []
       }
@@ -1304,6 +1348,33 @@ export type Database = {
           },
         ]
       }
+      settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       tentatives_qcm: {
         Row: {
           duree_secondes: number | null
@@ -1603,7 +1674,81 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      parents_view: {
+        Row: {
+          avatar_url: string | null
+          children_count: number | null
+          children_ids: string[] | null
+          etablissement_id: string | null
+          etablissement_nom: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          phone: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students_view: {
+        Row: {
+          annee_scolaire: string | null
+          avatar_url: string | null
+          classe_id: string | null
+          classe_niveau: string | null
+          classe_nom: string | null
+          date_naissance: string | null
+          etablissement_id: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          matricule: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classes_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eleve_classes_classe_id_fkey"
+            columns: ["classe_id"]
+            isOneToOne: false
+            referencedRelation: "classes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teachers_view: {
+        Row: {
+          avatar_url: string | null
+          classes: string[] | null
+          etablissement_id: string | null
+          etablissement_nom: string | null
+          first_name: string | null
+          id: string | null
+          last_name: string | null
+          matieres: string[] | null
+          phone: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_etablissement_id_fkey"
+            columns: ["etablissement_id"]
+            isOneToOne: false
+            referencedRelation: "etablissements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       calculate_attendance_rate: {
@@ -1614,6 +1759,7 @@ export type Database = {
         Args: { p_classe_id: string; p_matiere_id: string; p_period: string }
         Returns: number
       }
+      get_admin_etablissement: { Args: { _user_id: string }; Returns: string }
       get_parent_children: {
         Args: { p_parent_id: string }
         Returns: {
@@ -1655,6 +1801,10 @@ export type Database = {
       is_parent_of_student: {
         Args: { p_parent_id: string; p_student_id: string }
         Returns: boolean
+      }
+      lock_grading_period: {
+        Args: { _etablissement_id: string; _period: string }
+        Returns: undefined
       }
       resources_search_text: {
         Args: { r: Database["public"]["Tables"]["resources"]["Row"] }
