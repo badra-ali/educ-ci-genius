@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useGenerateQCM, useCreateRevisionPlan, useTutorSessions } from "@/hooks/useTutorIA";
+import { MarkdownMessage } from "@/components/MarkdownMessage";
 
 type Message = { role: "user" | "assistant"; content: string };
 type Mode = "conversation" | "explain" | "qcm" | "revise" | "summary" | "plan";
@@ -235,7 +236,13 @@ const TuteurIA = () => {
                               : "bg-muted"
                           }`}
                         >
-                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                          {message.role === "user" ? (
+                            <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                          ) : (
+                            <div className="text-sm leading-relaxed">
+                              <MarkdownMessage content={message.content} />
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))}
