@@ -1624,6 +1624,7 @@ export type Database = {
       tutor_sessions: {
         Row: {
           created_at: string
+          grade: string | null
           id: string
           language: string
           title: string | null
@@ -1632,6 +1633,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          grade?: string | null
           id?: string
           language?: string
           title?: string | null
@@ -1640,6 +1642,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          grade?: string | null
           id?: string
           language?: string
           title?: string | null
