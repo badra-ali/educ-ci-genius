@@ -236,13 +236,9 @@ const TuteurIA = () => {
                               : "bg-muted"
                           }`}
                         >
-                          {message.role === "user" ? (
-                            <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
-                          ) : (
-                            <div className="text-sm leading-relaxed">
-                              <MarkdownMessage content={message.content} />
-                            </div>
-                          )}
+                          <div className="text-sm leading-relaxed">
+                            <MarkdownMessage content={message.content} />
+                          </div>
                         </div>
                       </div>
                     ))}
