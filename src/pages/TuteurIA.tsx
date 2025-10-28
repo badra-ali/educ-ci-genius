@@ -2,15 +2,19 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Bot, Send, Sparkles, Loader2, Upload } from "lucide-react";
+import { ArrowLeft, Bot, Send, Sparkles, Loader2, BookOpen, Target, FileText, Calendar, Brain, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useGenerateQCM, useCreateRevisionPlan, useTutorSessions } from "@/hooks/useTutorIA";
 
 type Message = { role: "user" | "assistant"; content: string };
-type Mode = "explanation" | "qcm" | "revision" | "summary" | null;
+type Mode = "conversation" | "explain" | "qcm" | "revise" | "summary" | "plan";
 
 const TuteurIA = () => {
   const navigate = useNavigate();
@@ -22,16 +26,27 @@ const TuteurIA = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<Mode>(null);
+  const [selectedMode, setSelectedMode] = useState<Mode>("conversation");
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [subject, setSubject] = useState<string>("maths");
+  const [grade, setGrade] = useState<string>("3e");
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const { data: sessions } = useTutorSessions();
+  const generateQCM = useGenerateQCM();
+  const createRevisionPlan = useCreateRevisionPlan();
+
   const modes = [
-    { label: "Expliquer une leçon", icon: "📚", value: "explanation" as Mode },
-    { label: "Générer un QCM", icon: "✅", value: "qcm" as Mode },
-    { label: "Aider à réviser", icon: "🎯", value: "revision" as Mode },
-    { label: "Résumer un PDF", icon: "📄", value: "summary" as Mode },
+    { label: "Conversation", icon: <Bot className="w-4 h-4" />, value: "conversation" as Mode, description: "Discussion naturelle" },
+    { label: "Expliquer", icon: <BookOpen className="w-4 h-4" />, value: "explain" as Mode, description: "Explication détaillée" },
+    { label: "QCM", icon: <Target className="w-4 h-4" />, value: "qcm" as Mode, description: "Générer des exercices" },
+    { label: "Réviser", icon: <Brain className="w-4 h-4" />, value: "revise" as Mode, description: "Flashcards et résumés" },
+    { label: "Résumer", icon: <FileText className="w-4 h-4" />, value: "summary" as Mode, description: "Synthèse de documents" },
+    { label: "Planifier", icon: <Calendar className="w-4 h-4" />, value: "plan" as Mode, description: "Plan de révision" },
   ];
+
+  const subjects = ["maths", "physique", "svt", "français", "histoire", "géographie", "anglais", "philo", "ses"];
+  const grades = ["6e", "5e", "4e", "3e", "2nde", "1ère", "Tle"];
 
   useEffect(() => {
     scrollRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -46,7 +61,7 @@ const TuteurIA = () => {
     setIsLoading(true);
 
     try {
-      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tutor-chat`;
+      const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
       
       const response = await fetch(CHAT_URL, {
         method: 'POST',
@@ -59,6 +74,8 @@ const TuteurIA = () => {
           mode: selectedMode,
           sessionId: sessionId,
           language: 'fr',
+          subject,
+          grade,
         }),
       });
 
@@ -159,127 +176,183 @@ const TuteurIA = () => {
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Chat Interface */}
-          <div className="lg:col-span-2">
-            <Card className="h-[600px] flex flex-col">
-              <CardHeader className="border-b">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-purple-600" />
-                  <CardTitle>Conversation</CardTitle>
-                </div>
-              </CardHeader>
+        <Tabs value={selectedMode} onValueChange={(v) => setSelectedMode(v as Mode)} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+            {modes.map((mode) => (
+              <TabsTrigger key={mode.value} value={mode.value} className="gap-2">
+                {mode.icon}
+                <span className="hidden sm:inline">{mode.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-              <ScrollArea className="flex-1 p-6">
-                <div className="space-y-4">
-                  {messages.map((message, index) => (
-                    <div
-                      key={index}
-                      className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                    >
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Chat Interface */}
+            <div className="lg:col-span-2">
+              <Card className="h-[650px] flex flex-col">
+                <CardHeader className="border-b">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-purple-600" />
+                      <CardTitle>{modes.find(m => m.value === selectedMode)?.label}</CardTitle>
+                    </div>
+                    <div className="flex gap-2">
+                      <Select value={subject} onValueChange={setSubject}>
+                        <SelectTrigger className="w-[130px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {subjects.map(s => (
+                            <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={grade} onValueChange={setGrade}>
+                        <SelectTrigger className="w-[100px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {grades.map(g => (
+                            <SelectItem key={g} value={g}>{g}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <ScrollArea className="flex-1 p-6">
+                  <div className="space-y-4">
+                    {messages.map((message, index) => (
                       <div
-                        className={`max-w-[80%] rounded-lg p-4 ${
-                          message.role === "user"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted"
-                        }`}
+                        key={index}
+                        className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                       >
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <div
+                          className={`max-w-[85%] rounded-lg p-4 ${
+                            message.role === "user"
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted"
+                          }`}
+                        >
+                          <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {isLoading && (
-                    <div className="flex justify-start">
-                      <div className="bg-muted rounded-lg p-4">
-                        <Loader2 className="w-5 h-5 animate-spin" />
+                    ))}
+                    {isLoading && (
+                      <div className="flex justify-start">
+                        <div className="bg-muted rounded-lg p-4">
+                          <Loader2 className="w-5 h-5 animate-spin text-purple-600" />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  <div ref={scrollRef} />
-                </div>
-              </ScrollArea>
-
-              <div className="border-t p-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Posez votre question..."
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
-                    disabled={isLoading}
-                  />
-                  <Button onClick={handleSend} disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Send className="w-4 h-4" />
                     )}
-                  </Button>
+                    <div ref={scrollRef} />
+                  </div>
+                </ScrollArea>
+
+                <div className="border-t p-4">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder={`Posez votre question (${modes.find(m => m.value === selectedMode)?.description})...`}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && !isLoading && handleSend()}
+                      disabled={isLoading}
+                    />
+                    <Button onClick={handleSend} disabled={isLoading} size="icon">
+                      {isLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Send className="w-4 h-4" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </Card>
+              </Card>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Capacités IA</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="flex items-start gap-2">
+                    <BookOpen className="w-4 h-4 mt-1 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium">RAG & Citations</p>
+                      <p className="text-xs text-muted-foreground">Répond avec sources vérifiées</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Target className="w-4 h-4 mt-1 text-green-600" />
+                    <div>
+                      <p className="text-sm font-medium">QCM adaptatifs</p>
+                      <p className="text-xs text-muted-foreground">Exercices personnalisés</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Brain className="w-4 h-4 mt-1 text-purple-600" />
+                    <div>
+                      <p className="text-sm font-medium">Suivi progression</p>
+                      <p className="text-xs text-muted-foreground">Track compétences & maîtrise</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Volume2 className="w-4 h-4 mt-1 text-orange-600" />
+                    <div>
+                      <p className="text-sm font-medium">Audio (TTS)</p>
+                      <p className="text-xs text-muted-foreground">Écoute les réponses</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {sessions && sessions.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Sessions récentes</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      {sessions.slice(0, 5).map((session) => (
+                        <Button
+                          key={session.id}
+                          variant="ghost"
+                          className="w-full justify-start text-sm"
+                          onClick={() => {
+                            setSessionId(session.id);
+                            setSelectedMode(session.mode as Mode);
+                            toast.info('Session chargée');
+                          }}
+                        >
+                          <span className="truncate">{session.title || `${session.mode} - ${session.subject || 'Général'}`}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 border-purple-200">
+                <CardHeader>
+                  <CardTitle className="text-lg">💡 Conseil</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedMode === 'conversation' && "Posez des questions précises pour obtenir des réponses détaillées."}
+                    {selectedMode === 'explain' && "Demandez l'explication d'un concept avec des exemples concrets."}
+                    {selectedMode === 'qcm' && "Spécifiez le thème et le nombre de questions souhaité."}
+                    {selectedMode === 'revise' && "Je vais créer des flashcards et un résumé structuré."}
+                    {selectedMode === 'summary' && "Partagez un texte ou un PDF à résumer."}
+                    {selectedMode === 'plan' && "Indiquez votre objectif et le temps disponible par jour."}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-
-          {/* Modes & Features */}
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Modes d'assistance</CardTitle>
-                <CardDescription>
-                  Choisissez comment je peux vous aider
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {modes.map((mode, index) => (
-                  <Button
-                    key={index}
-                    variant={selectedMode === mode.value ? "default" : "outline"}
-                    className="w-full justify-start text-left"
-                    onClick={() => {
-                      setSelectedMode(mode.value);
-                      toast.success(`Mode "${mode.label}" activé`);
-                    }}
-                  >
-                    <span className="mr-2">{mode.icon}</span>
-                    {mode.label}
-                  </Button>
-                ))}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Capacités</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <Badge variant="secondary" className="mr-2">
-                  Multilingue (FR/EN)
-                </Badge>
-                <Badge variant="secondary" className="mr-2">
-                  Génération de QCM
-                </Badge>
-                <Badge variant="secondary" className="mr-2">
-                  Analyse de documents
-                </Badge>
-                <Badge variant="secondary" className="mr-2">
-                  Plans de cours
-                </Badge>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-gradient-to-br from-purple-50 to-blue-50 border-purple-200">
-              <CardHeader>
-                <CardTitle className="text-lg">💡 Astuce</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Plus vos questions sont précises, meilleures seront mes réponses.
-                  N'hésitez pas à me demander des exemples ou des clarifications !
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        </Tabs>
       </main>
     </div>
   );

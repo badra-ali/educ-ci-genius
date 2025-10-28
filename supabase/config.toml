@@ -2,3 +2,15 @@ project_id = "yugfwqeurvorpspubjeh"
 
 [functions.tutor-chat]
 verify_jwt = true
+
+[functions.ai-chat]
+verify_jwt = true
+
+[functions.ai-rag-query]
+verify_jwt = true
+
+[functions.ai-qcm-generate]
+verify_jwt = true
+
+[functions.ai-revise-plan]
+verify_jwt = true

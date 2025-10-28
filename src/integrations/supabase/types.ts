@@ -624,6 +624,47 @@ export type Database = {
         }
         Relationships: []
       }
+      generated_qcms: {
+        Row: {
+          created_at: string
+          grade: string | null
+          id: string
+          items: Json
+          session_id: string | null
+          subject: string
+          theme: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          grade?: string | null
+          id?: string
+          items: Json
+          session_id?: string | null
+          subject: string
+          theme: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          grade?: string | null
+          id?: string
+          items?: Json
+          session_id?: string | null
+          subject?: string
+          theme?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generated_qcms_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grades: {
         Row: {
           coefficient: number | null
@@ -1246,6 +1287,48 @@ export type Database = {
           },
         ]
       }
+      revision_plans: {
+        Row: {
+          completed_days: number | null
+          created_at: string
+          end_date: string
+          grade: string
+          id: string
+          plan: Json
+          start_date: string
+          subject: string
+          target: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_days?: number | null
+          created_at?: string
+          end_date: string
+          grade: string
+          id?: string
+          plan: Json
+          start_date: string
+          subject: string
+          target?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_days?: number | null
+          created_at?: string
+          end_date?: string
+          grade?: string
+          id?: string
+          plan?: Json
+          start_date?: string
+          subject?: string
+          target?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       schedule: {
         Row: {
           classe_id: string
@@ -1372,6 +1455,42 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      skill_progress: {
+        Row: {
+          attempts: number | null
+          created_at: string
+          id: string
+          last_practiced_at: string | null
+          mastery_level: number | null
+          skill_code: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string
+          id?: string
+          last_practiced_at?: string | null
+          mastery_level?: number | null
+          skill_code: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string
+          id?: string
+          last_practiced_at?: string | null
+          mastery_level?: number | null
+          skill_code?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
