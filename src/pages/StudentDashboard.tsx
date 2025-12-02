@@ -34,7 +34,7 @@ const StudentDashboard = () => {
       icon: GraduationCap,
       color: "text-primary",
       bgColor: "bg-primary/10",
-      route: "/liste-cours",
+      route: "/classe",
       stats: [
         { label: "Cours", value: "Disponibles" },
         { label: "QCM", value: "Interactifs" },
