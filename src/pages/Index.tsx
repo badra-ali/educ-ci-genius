@@ -50,6 +50,7 @@ const Index = () => {
       icon: GraduationCap,
       color: "text-primary",
       bgColor: "bg-primary/10",
+      route: "/classe",
     },
     {
       title: "Suivi Scolaire",
@@ -57,6 +58,7 @@ const Index = () => {
       icon: Calendar,
       color: "text-secondary",
       bgColor: "bg-secondary/10",
+      route: "/suivi",
     },
     {
       title: "Bibliothèque Numérique",
@@ -64,6 +66,7 @@ const Index = () => {
       icon: Library,
       color: "text-accent",
       bgColor: "bg-accent/10",
+      route: "/bibliotheque",
     },
     {
       title: "Tuteur IA",
@@ -71,6 +74,7 @@ const Index = () => {
       icon: Bot,
       color: "text-purple-600",
       bgColor: "bg-purple-100",
+      route: "/tuteur-ia",
     },
   ];
 
@@ -164,6 +168,7 @@ const Index = () => {
                 <Card
                   key={index}
                   className="border-2 hover:shadow-elegant transition-all hover:-translate-y-2 cursor-pointer"
+                  onClick={() => navigate(feature.route)}
                 >
                   <CardHeader>
                     <div className={`w-14 h-14 rounded-xl ${feature.bgColor} flex items-center justify-center mb-4`}>
