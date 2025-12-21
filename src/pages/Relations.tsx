@@ -5,7 +5,8 @@ import { ParentRelations } from "@/components/relations/ParentRelations";
 import { TeacherRelations } from "@/components/relations/TeacherRelations";
 import { ClassRelations } from "@/components/relations/ClassRelations";
 import { ClasseVirtuelleRelations } from "@/components/relations/ClasseVirtuelleRelations";
-import { Users, GraduationCap, School, UserCircle, BookOpen } from "lucide-react";
+import { SuiviScolaireRelations } from "@/components/relations/SuiviScolaireRelations";
+import { Users, GraduationCap, School, UserCircle, BookOpen, ClipboardCheck } from "lucide-react";
 
 export default function Relations() {
   return (
@@ -18,10 +19,16 @@ export default function Relations() {
       </div>
 
       <Tabs defaultValue="classe-virtuelle" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="classe-virtuelle" className="gap-2">
             <BookOpen className="h-4 w-4" />
-            Classe Virtuelle
+            <span className="hidden md:inline">Classe Virtuelle</span>
+            <span className="md:hidden">Cours</span>
+          </TabsTrigger>
+          <TabsTrigger value="suivi-scolaire" className="gap-2">
+            <ClipboardCheck className="h-4 w-4" />
+            <span className="hidden md:inline">Suivi Scolaire</span>
+            <span className="md:hidden">Suivi</span>
           </TabsTrigger>
           <TabsTrigger value="students" className="gap-2">
             <GraduationCap className="h-4 w-4" />
@@ -33,7 +40,8 @@ export default function Relations() {
           </TabsTrigger>
           <TabsTrigger value="teachers" className="gap-2">
             <Users className="h-4 w-4" />
-            Enseignants
+            <span className="hidden md:inline">Enseignants</span>
+            <span className="md:hidden">Prof</span>
           </TabsTrigger>
           <TabsTrigger value="classes" className="gap-2">
             <School className="h-4 w-4" />
@@ -51,6 +59,20 @@ export default function Relations() {
             </CardHeader>
             <CardContent>
               <ClasseVirtuelleRelations />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="suivi-scolaire">
+          <Card>
+            <CardHeader>
+              <CardTitle>Relations Suivi Scolaire</CardTitle>
+              <CardDescription>
+                Élève → Classes, Notes, Présences | Enseignant → Notes | Classe → EDT | Notes → Bulletins
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SuiviScolaireRelations />
             </CardContent>
           </Card>
         </TabsContent>
