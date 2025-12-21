@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, BookOpen, FileText, MessageSquare, ClipboardCheck, TrendingUp } from "lucide-react";
+import { Calendar, BookOpen, FileText, MessageSquare, ClipboardCheck, TrendingUp, BarChart3 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -30,6 +30,12 @@ export default function TeacherDashboard() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Tableau de bord Enseignant</h1>
         <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/app/teacher/analytics">
+              <BarChart3 className="mr-2 h-4 w-4" />
+              Analytics
+            </Link>
+          </Button>
           <Button asChild>
             <Link to="/app/teacher/assignments/new">
               <FileText className="mr-2 h-4 w-4" />
