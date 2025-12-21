@@ -125,6 +125,97 @@ All colors MUST be HSL.
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
+
+  /* Focus visible pour accessibilité clavier */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Skip link pour lecteurs d'écran */
+  .sr-only:focus {
+    @apply not-sr-only;
+  }
+}
+
+/* ===== ACCESSIBILITÉ ===== */
+
+/* Mode contraste élevé */
+.high-contrast {
+  --foreground: 0 0% 0%;
+  --background: 0 0% 100%;
+  --primary: 220 100% 35%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 140 100% 25%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 0 0% 90%;
+  --muted-foreground: 0 0% 20%;
+  --border: 0 0% 0%;
+  --ring: 220 100% 35%;
+}
+
+.dark.high-contrast {
+  --foreground: 0 0% 100%;
+  --background: 0 0% 0%;
+  --primary: 45 100% 50%;
+  --primary-foreground: 0 0% 0%;
+  --secondary: 120 100% 40%;
+  --secondary-foreground: 0 0% 0%;
+  --muted: 0 0% 15%;
+  --muted-foreground: 0 0% 85%;
+  --border: 0 0% 100%;
+  --ring: 45 100% 50%;
+}
+
+/* Réduction des animations */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Tailles de police */
+.font-size-normal {
+  font-size: 100%;
+}
+
+.font-size-large {
+  font-size: 112.5%;
+}
+
+.font-size-xlarge {
+  font-size: 125%;
+}
+
+/* Amélioration du contraste pour les liens */
+a:not([class]) {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+a:not([class]):hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Focus amélioré pour les boutons */
+button:focus-visible,
+[role="button"]:focus-visible {
+  @apply ring-2 ring-ring ring-offset-2;
+}
+
+/* Touch target minimum (44x44px pour WCAG 2.5.5) */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 @layer utilities {
@@ -150,5 +241,14 @@ All colors MUST be HSL.
   
   .transition-smooth {
     transition: var(--transition-base);
+  }
+
+  /* Utilitaires d'accessibilité */
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+  }
+
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
   }
 }
