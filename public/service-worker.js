@@ -1,11 +1,14 @@
 const CACHE_NAME = 'educ-ci-genius-v1';
 const DATA_CACHE = 'educ-ci-data-v1';
+const LIBRARY_CACHE = 'library-offline-v1';
+
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
   '/app/student',
   '/suivi',
+  '/bibliotheque',
 ];
 
 // Installation
@@ -23,7 +26,8 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE) {
+          // Garder le cache de la bibliothèque hors-ligne
+          if (cacheName !== CACHE_NAME && cacheName !== DATA_CACHE && cacheName !== LIBRARY_CACHE) {
             return caches.delete(cacheName);
           }
         })
@@ -36,6 +40,29 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Ressources de la bibliothèque hors-ligne - Cache first
+  if (url.pathname.startsWith('/api/offline-resource/') || 
+      request.url.includes('library-resources') ||
+      request.url.includes('supabase.co/storage')) {
+    event.respondWith(
+      caches.match(request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        return fetch(request).then((response) => {
+          if (response && response.status === 200) {
+            const responseToCache = response.clone();
+            caches.open(LIBRARY_CACHE).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return response;
+        });
+      })
+    );
+    return;
+  }
 
   // API calls - Network first with cache fallback
   if (url.pathname.includes('/rest/v1/') || url.pathname.includes('/functions/v1/')) {
