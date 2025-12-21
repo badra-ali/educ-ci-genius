@@ -4,7 +4,8 @@ import { StudentRelations } from "@/components/relations/StudentRelations";
 import { ParentRelations } from "@/components/relations/ParentRelations";
 import { TeacherRelations } from "@/components/relations/TeacherRelations";
 import { ClassRelations } from "@/components/relations/ClassRelations";
-import { Users, GraduationCap, School, UserCircle } from "lucide-react";
+import { ClasseVirtuelleRelations } from "@/components/relations/ClasseVirtuelleRelations";
+import { Users, GraduationCap, School, UserCircle, BookOpen } from "lucide-react";
 
 export default function Relations() {
   return (
@@ -16,8 +17,12 @@ export default function Relations() {
         </p>
       </div>
 
-      <Tabs defaultValue="students" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="classe-virtuelle" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="classe-virtuelle" className="gap-2">
+            <BookOpen className="h-4 w-4" />
+            Classe Virtuelle
+          </TabsTrigger>
           <TabsTrigger value="students" className="gap-2">
             <GraduationCap className="h-4 w-4" />
             Élèves
@@ -35,6 +40,20 @@ export default function Relations() {
             Classes
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="classe-virtuelle">
+          <Card>
+            <CardHeader>
+              <CardTitle>Relations Classe Virtuelle</CardTitle>
+              <CardDescription>
+                Cours → Devoirs, QCM, Threads | Devoirs → Rendus | QCM → Tentatives
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ClasseVirtuelleRelations />
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="students">
           <Card>
