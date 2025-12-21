@@ -222,8 +222,8 @@ const TuteurIA = () => {
           <div className="grid gap-6 lg:grid-cols-3">
             {/* Chat Interface */}
             <div className="lg:col-span-2">
-              <Card className="h-[650px] flex flex-col">
-                <CardHeader className="border-b">
+              <Card className="h-[650px] flex flex-col overflow-hidden">
+                <CardHeader className="border-b flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-purple-600" />
@@ -254,7 +254,7 @@ const TuteurIA = () => {
                   </div>
                 </CardHeader>
 
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="flex-1 min-h-0 overflow-y-auto p-6">
                   <div className="space-y-4">
                     {messages.map((message, index) => (
                       <div
