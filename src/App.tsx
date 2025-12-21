@@ -37,6 +37,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminUtilisateurs from "./pages/AdminUtilisateurs";
 import AdminClasses from "./pages/AdminClasses";
 import AdminAssiduite from "./pages/AdminAssiduite";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import TeacherAnalytics from "./pages/TeacherAnalytics";
 import NotFound from "./pages/NotFound";
 
 const App = () => (
@@ -119,6 +121,27 @@ const App = () => (
               }
             />
             
+            {/* Teacher Dashboard & Analytics */}
+            <Route
+              path="/app/teacher"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ENSEIGNANT", "ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <TeacherDashboard />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app/teacher/analytics"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ENSEIGNANT", "ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <TeacherAnalytics />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
             {/* Student/Teacher routes */}
             <Route
               path="/qcm/:id/passer"
