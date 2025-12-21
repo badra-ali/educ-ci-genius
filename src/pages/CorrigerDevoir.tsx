@@ -1,16 +1,27 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, CheckCircle2, Clock, FileText } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Sparkles, Loader2, ThumbsUp, AlertTriangle, Lightbulb, Copy } from "lucide-react";
 import { useDevoirs } from "@/hooks/useDevoirs";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Separator } from "@/components/ui/separator";
+
+interface AIFeedback {
+  suggested_score: number | null;
+  strengths: string[];
+  improvements: string[];
+  student_feedback: string;
+  teacher_notes?: string;
+  confidence: 'high' | 'medium' | 'low';
+}
 
 const CorrigerDevoir = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,6 +31,8 @@ const CorrigerDevoir = () => {
   const [selectedRendu, setSelectedRendu] = useState<string | null>(null);
   const [note, setNote] = useState<string>("");
   const [commentaire, setCommentaire] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState<AIFeedback | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -44,6 +57,65 @@ const CorrigerDevoir = () => {
     setSelectedRendu(null);
     setNote("");
     setCommentaire("");
+    setAiFeedback(null);
+  };
+
+  const handleAIAssist = async (rendu: any) => {
+    if (!rendu.texte) {
+      toast.error("Aucun texte à analyser pour ce rendu");
+      return;
+    }
+
+    setAiLoading(true);
+    setAiFeedback(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-grading-assist', {
+        body: {
+          submission_id: rendu.id,
+          student_text: rendu.texte,
+          assignment_instructions: devoir?.consignes || devoir?.titre || "Devoir",
+          max_score: devoir?.note_sur || 20
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.feedback) {
+        setAiFeedback(data.feedback);
+        toast.success("Analyse IA terminée !");
+      } else {
+        throw new Error("Réponse IA invalide");
+      }
+    } catch (error: any) {
+      console.error("AI assist error:", error);
+      if (error.message?.includes("429")) {
+        toast.error("Limite de requêtes atteinte. Réessayez dans quelques instants.");
+      } else if (error.message?.includes("402")) {
+        toast.error("Crédits IA insuffisants.");
+      } else {
+        toast.error("Erreur lors de l'analyse IA");
+      }
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const applyAISuggestions = () => {
+    if (!aiFeedback) return;
+    
+    if (aiFeedback.suggested_score !== null) {
+      setNote(aiFeedback.suggested_score.toString());
+    }
+    if (aiFeedback.student_feedback) {
+      setCommentaire(aiFeedback.student_feedback);
+    }
+    toast.success("Suggestions appliquées !");
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Copié dans le presse-papier");
   };
 
   if (loading) {
@@ -67,7 +139,6 @@ const CorrigerDevoir = () => {
     );
   }
 
-  const renduSelected = rendus.find(r => r.id === selectedRendu);
   const rendusACorreer = rendus.filter(r => r.statut === 'rendu' || r.statut === 'en_retard');
   const rendusNotes = rendus.filter(r => r.statut === 'note');
 
@@ -170,7 +241,11 @@ const CorrigerDevoir = () => {
                           {rendu.note !== null ? `${rendu.note}/${devoir.note_sur}` : '-'}
                         </TableCell>
                         <TableCell>
-                          <Dialog>
+                          <Dialog onOpenChange={(open) => {
+                            if (!open) {
+                              setAiFeedback(null);
+                            }
+                          }}>
                             <DialogTrigger asChild>
                               <Button 
                                 variant="outline" 
@@ -179,12 +254,13 @@ const CorrigerDevoir = () => {
                                   setSelectedRendu(rendu.id);
                                   setNote(rendu.note?.toString() || "");
                                   setCommentaire(rendu.commentaire_prof || "");
+                                  setAiFeedback(null);
                                 }}
                               >
                                 {rendu.statut === 'note' ? 'Voir' : 'Corriger'}
                               </Button>
                             </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                               <DialogHeader>
                                 <DialogTitle>
                                   Rendu de {rendu.profiles?.first_name} {rendu.profiles?.last_name}
@@ -192,8 +268,9 @@ const CorrigerDevoir = () => {
                               </DialogHeader>
                               
                               <div className="space-y-4">
+                                {/* Réponse de l'élève */}
                                 <Card>
-                                  <CardHeader>
+                                  <CardHeader className="py-3">
                                     <CardTitle className="text-base">Réponse de l'élève</CardTitle>
                                   </CardHeader>
                                   <CardContent>
@@ -203,6 +280,141 @@ const CorrigerDevoir = () => {
                                   </CardContent>
                                 </Card>
 
+                                {/* Bouton Assistance IA */}
+                                {rendu.statut !== 'note' && rendu.texte && (
+                                  <Button
+                                    variant="outline"
+                                    className="w-full border-purple-500/50 text-purple-600 hover:bg-purple-500/10"
+                                    onClick={() => handleAIAssist(rendu)}
+                                    disabled={aiLoading}
+                                  >
+                                    {aiLoading ? (
+                                      <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Analyse en cours...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Sparkles className="w-4 h-4 mr-2" />
+                                        Assistance IA pour la correction
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+
+                                {/* Résultats IA */}
+                                {aiFeedback && (
+                                  <Card className="border-purple-500/30 bg-gradient-to-br from-purple-500/5 to-transparent">
+                                    <CardHeader className="py-3">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <Sparkles className="w-4 h-4 text-purple-500" />
+                                          <CardTitle className="text-base">Suggestions IA</CardTitle>
+                                        </div>
+                                        <Badge variant={
+                                          aiFeedback.confidence === 'high' ? 'default' :
+                                          aiFeedback.confidence === 'medium' ? 'secondary' : 'outline'
+                                        }>
+                                          Confiance: {aiFeedback.confidence === 'high' ? 'Élevée' :
+                                                     aiFeedback.confidence === 'medium' ? 'Moyenne' : 'Faible'}
+                                        </Badge>
+                                      </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                      {/* Note suggérée */}
+                                      {aiFeedback.suggested_score !== null && (
+                                        <div className="flex items-center justify-between p-3 bg-background rounded-lg border">
+                                          <span className="font-medium">Note suggérée</span>
+                                          <span className="text-2xl font-bold text-purple-600">
+                                            {aiFeedback.suggested_score}/{devoir.note_sur}
+                                          </span>
+                                        </div>
+                                      )}
+
+                                      {/* Points forts */}
+                                      {aiFeedback.strengths.length > 0 && (
+                                        <div>
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <ThumbsUp className="w-4 h-4 text-green-500" />
+                                            <span className="font-medium text-sm">Points forts</span>
+                                          </div>
+                                          <ul className="space-y-1">
+                                            {aiFeedback.strengths.map((s, i) => (
+                                              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                                                <span className="text-green-500">•</span>
+                                                {s}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+
+                                      {/* Axes d'amélioration */}
+                                      {aiFeedback.improvements.length > 0 && (
+                                        <div>
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <Lightbulb className="w-4 h-4 text-amber-500" />
+                                            <span className="font-medium text-sm">Axes d'amélioration</span>
+                                          </div>
+                                          <ul className="space-y-1">
+                                            {aiFeedback.improvements.map((s, i) => (
+                                              <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
+                                                <span className="text-amber-500">•</span>
+                                                {s}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
+                                      )}
+
+                                      {/* Feedback suggéré */}
+                                      {aiFeedback.student_feedback && (
+                                        <div>
+                                          <div className="flex items-center justify-between mb-2">
+                                            <span className="font-medium text-sm">Feedback suggéré pour l'élève</span>
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => copyToClipboard(aiFeedback.student_feedback)}
+                                            >
+                                              <Copy className="w-3 h-3" />
+                                            </Button>
+                                          </div>
+                                          <p className="text-sm p-3 bg-muted/50 rounded-lg">
+                                            {aiFeedback.student_feedback}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {/* Notes pour l'enseignant */}
+                                      {aiFeedback.teacher_notes && (
+                                        <div className="p-3 bg-amber-500/10 rounded-lg border border-amber-500/20">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <AlertTriangle className="w-4 h-4 text-amber-500" />
+                                            <span className="font-medium text-sm">Note pour vous</span>
+                                          </div>
+                                          <p className="text-sm text-muted-foreground">
+                                            {aiFeedback.teacher_notes}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      <Separator />
+
+                                      <Button 
+                                        onClick={applyAISuggestions}
+                                        className="w-full bg-purple-600 hover:bg-purple-700"
+                                      >
+                                        <Sparkles className="w-4 h-4 mr-2" />
+                                        Appliquer les suggestions
+                                      </Button>
+                                    </CardContent>
+                                  </Card>
+                                )}
+
+                                <Separator />
+
+                                {/* Formulaire de notation */}
                                 <div className="space-y-2">
                                   <Label htmlFor="note">Note / {devoir.note_sur}</Label>
                                   <Input
@@ -218,7 +430,7 @@ const CorrigerDevoir = () => {
                                 </div>
 
                                 <div className="space-y-2">
-                                  <Label htmlFor="commentaire">Commentaire</Label>
+                                  <Label htmlFor="commentaire">Commentaire pour l'élève</Label>
                                   <Textarea
                                     id="commentaire"
                                     value={commentaire}

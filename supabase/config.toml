@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.parent-proactive-alerts]
 verify_jwt = false
+
+[functions.ai-grading-assist]
+verify_jwt = true
