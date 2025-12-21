@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.parent-weekly-report]
 verify_jwt = false
+
+[functions.parent-proactive-alerts]
+verify_jwt = false
