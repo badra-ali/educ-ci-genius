@@ -9,7 +9,9 @@ import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { GamificationPanel } from "@/components/gamification/GamificationPanel";
 import { supabase } from "@/integrations/supabase/client";
+
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const { data: dashboard, isLoading } = useStudentDashboard();
@@ -190,6 +192,17 @@ const StudentDashboard = () => {
                 </Card>
               );
             })}
+          </div>
+        </div>
+
+        {/* Gamification Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <Award className="w-6 h-6 text-amber-500" />
+            <h2 className="text-2xl font-bold">Votre Progression</h2>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <GamificationPanel />
           </div>
         </div>
 
