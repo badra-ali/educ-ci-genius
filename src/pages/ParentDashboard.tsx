@@ -5,16 +5,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, TrendingUp, CheckCircle, MessageSquare } from "lucide-react";
+import { Calendar, TrendingUp, CheckCircle, MessageSquare, Mail, Loader2, Bell } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export default function ParentDashboard() {
   const { data: children, isLoading: childrenLoading } = useChildren();
   const [selectedChild, setSelectedChild] = useState<string>("");
+  const [sendingReport, setSendingReport] = useState(false);
+  const [weeklyReportEnabled, setWeeklyReportEnabled] = useState(true);
   
   const { data: dashboard, isLoading: dashboardLoading } = useParentDashboard(selectedChild);
+
+  // Request weekly report manually
+  const handleRequestReport = async () => {
+    setSendingReport(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('parent-weekly-report');
+      
+      if (error) throw error;
+      
+      toast.success("Rapport envoyé ! Vérifiez votre boîte email.");
+    } catch (error: any) {
+      console.error("Error requesting report:", error);
+      toast.error("Erreur lors de l'envoi du rapport. Veuillez réessayer.");
+    } finally {
+      setSendingReport(false);
+    }
+  };
 
   // Auto-select first child
   if (children && children.length > 0 && !selectedChild) {
@@ -259,6 +282,81 @@ export default function ParentDashboard() {
                   </Link>
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Weekly Report Section */}
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Mail className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Rapports hebdomadaires</CardTitle>
+                    <CardDescription>
+                      Recevez un résumé de la semaine par email chaque dimanche
+                    </CardDescription>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-background rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <Label htmlFor="weekly-report" className="font-medium">
+                      Rapports automatiques
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Recevez automatiquement un rapport chaque semaine
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="weekly-report"
+                  checked={weeklyReportEnabled}
+                  onCheckedChange={setWeeklyReportEnabled}
+                />
+              </div>
+
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <h4 className="font-medium mb-2">Le rapport inclut :</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Taux de présence et absences de la semaine
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Notes obtenues avec moyenne
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                    Devoirs à venir pour les 2 prochaines semaines
+                  </li>
+                </ul>
+              </div>
+
+              <Button 
+                onClick={handleRequestReport}
+                disabled={sendingReport}
+                className="w-full"
+              >
+                {sendingReport ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="mr-2 h-4 w-4" />
+                    Recevoir le rapport maintenant
+                  </>
+                )}
+              </Button>
             </CardContent>
           </Card>
         </>
