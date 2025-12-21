@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Bot, Send, Sparkles, Loader2, BookOpen, Target, FileText, Calendar, Brain, Volume2, Plus } from "lucide-react";
+import { ArrowLeft, Bot, Send, Sparkles, Loader2, BookOpen, Target, FileText, Calendar, Brain, Volume2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,7 @@ import { useGenerateQCM, useCreateRevisionPlan, useTutorSessions, TutorMode } fr
 import { MarkdownMessage } from "@/components/MarkdownMessage";
 import { TutorHistory } from "@/components/tutor/TutorHistory";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { PersonalizedExercises } from "@/components/tutor/PersonalizedExercises";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -301,69 +302,16 @@ const TuteurIA = () => {
 
             {/* Sidebar */}
             <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Capacités IA</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <BookOpen className="w-4 h-4 mt-1 text-blue-600" />
-                    <div>
-                      <p className="text-sm font-medium">RAG & Citations</p>
-                      <p className="text-xs text-muted-foreground">Répond avec sources vérifiées</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Target className="w-4 h-4 mt-1 text-green-600" />
-                    <div>
-                      <p className="text-sm font-medium">QCM adaptatifs</p>
-                      <p className="text-xs text-muted-foreground">Exercices personnalisés</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Brain className="w-4 h-4 mt-1 text-purple-600" />
-                    <div>
-                      <p className="text-sm font-medium">Suivi progression</p>
-                      <p className="text-xs text-muted-foreground">Track compétences & maîtrise</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Volume2 className="w-4 h-4 mt-1 text-orange-600" />
-                    <div>
-                      <p className="text-sm font-medium">Audio (TTS)</p>
-                      <p className="text-xs text-muted-foreground">Écoute les réponses</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Exercices personnalisés */}
+              <PersonalizedExercises 
+                subject={subject} 
+                grade={grade}
+                onExerciseComplete={(skill, correct) => {
+                  console.log(`Exercice ${correct ? 'réussi' : 'raté'} pour ${skill}`);
+                }}
+              />
 
-              {sessions && sessions.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Sessions récentes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {sessions.slice(0, 5).map((session) => (
-                        <Button
-                          key={session.id}
-                          variant="ghost"
-                          className="w-full justify-start text-sm"
-                          onClick={() => {
-                            setSessionId(session.id);
-                            setSelectedMode(session.mode as TutorMode);
-                            toast.info('Session chargée');
-                          }}
-                        >
-                          <span className="truncate">{session.title || `${session.mode} - ${session.subject || 'Général'}`}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 border-purple-200">
+              <Card className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 border-purple-200 dark:border-purple-800">
                 <CardHeader>
                   <CardTitle className="text-lg">💡 Conseil</CardTitle>
                 </CardHeader>
