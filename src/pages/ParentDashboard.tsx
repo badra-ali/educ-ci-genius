@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, TrendingUp, CheckCircle, MessageSquare, Mail, Loader2, Bell } from "lucide-react";
+import { Calendar, TrendingUp, CheckCircle, MessageSquare, Mail, Loader2, Bell, AlertTriangle, TrendingDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -13,12 +13,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function ParentDashboard() {
   const { data: children, isLoading: childrenLoading } = useChildren();
   const [selectedChild, setSelectedChild] = useState<string>("");
   const [sendingReport, setSendingReport] = useState(false);
   const [weeklyReportEnabled, setWeeklyReportEnabled] = useState(true);
+  const [alertsEnabled, setAlertsEnabled] = useState(true);
+  const [checkingAlerts, setCheckingAlerts] = useState(false);
   
   const { data: dashboard, isLoading: dashboardLoading } = useParentDashboard(selectedChild);
 
@@ -27,15 +30,36 @@ export default function ParentDashboard() {
     setSendingReport(true);
     try {
       const { data, error } = await supabase.functions.invoke('parent-weekly-report');
-      
       if (error) throw error;
-      
       toast.success("Rapport envoyé ! Vérifiez votre boîte email.");
     } catch (error: any) {
       console.error("Error requesting report:", error);
       toast.error("Erreur lors de l'envoi du rapport. Veuillez réessayer.");
     } finally {
       setSendingReport(false);
+    }
+  };
+
+  // Check proactive alerts
+  const handleCheckAlerts = async () => {
+    setCheckingAlerts(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase.functions.invoke('parent-proactive-alerts', {
+        body: { parent_id: user?.id }
+      });
+      if (error) throw error;
+      const alertCount = data?.results?.[0]?.alerts?.length || 0;
+      if (alertCount > 0) {
+        toast.warning(`${alertCount} alerte(s) détectée(s). Email envoyé !`);
+      } else {
+        toast.success("Aucune alerte détectée. Tout va bien !");
+      }
+    } catch (error: any) {
+      console.error("Error checking alerts:", error);
+      toast.error("Erreur lors de la vérification des alertes.");
+    } finally {
+      setCheckingAlerts(false);
     }
   };
 
@@ -285,20 +309,96 @@ export default function ParentDashboard() {
             </CardContent>
           </Card>
 
+          {/* Proactive Alerts Section */}
+          <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-transparent">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-amber-500/10 rounded-lg">
+                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                </div>
+                <div>
+                  <CardTitle>Alertes proactives</CardTitle>
+                  <CardDescription>
+                    Soyez informé en cas de baisse de notes ou d'absences répétées
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-background rounded-lg border">
+                <div className="flex items-center gap-3">
+                  <TrendingDown className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <Label htmlFor="alerts-enabled" className="font-medium">
+                      Alertes automatiques
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Recevez des alertes par email et notification
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  id="alerts-enabled"
+                  checked={alertsEnabled}
+                  onCheckedChange={setAlertsEnabled}
+                />
+              </div>
+
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <h4 className="font-medium mb-2">Vous serez alerté pour :</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li className="flex items-center gap-2">
+                    <TrendingDown className="h-4 w-4 text-amber-500" />
+                    Baisse significative de moyenne (&gt; 3 points)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    Notes très basses (&lt; 8/20)
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-amber-500" />
+                    Absences non justifiées répétées
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-amber-500" />
+                    Retards fréquents
+                  </li>
+                </ul>
+              </div>
+
+              <Button 
+                onClick={handleCheckAlerts}
+                disabled={checkingAlerts}
+                variant="outline"
+                className="w-full border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+              >
+                {checkingAlerts ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Vérification...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle className="mr-2 h-4 w-4" />
+                    Vérifier les alertes maintenant
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* Weekly Report Section */}
           <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Mail className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <CardTitle>Rapports hebdomadaires</CardTitle>
-                    <CardDescription>
-                      Recevez un résumé de la semaine par email chaque dimanche
-                    </CardDescription>
-                  </div>
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Mail className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Rapports hebdomadaires</CardTitle>
+                  <CardDescription>
+                    Recevez un résumé de la semaine par email chaque dimanche
+                  </CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -320,24 +420,6 @@ export default function ParentDashboard() {
                   checked={weeklyReportEnabled}
                   onCheckedChange={setWeeklyReportEnabled}
                 />
-              </div>
-
-              <div className="p-4 bg-muted/30 rounded-lg">
-                <h4 className="font-medium mb-2">Le rapport inclut :</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Taux de présence et absences de la semaine
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Notes obtenues avec moyenne
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Devoirs à venir pour les 2 prochaines semaines
-                  </li>
-                </ul>
               </div>
 
               <Button 
