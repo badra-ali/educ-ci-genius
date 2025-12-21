@@ -2,20 +2,20 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Bot, Send, Sparkles, Loader2, BookOpen, Target, FileText, Calendar, Brain, Volume2 } from "lucide-react";
+import { ArrowLeft, Bot, Send, Sparkles, Loader2, BookOpen, Target, FileText, Calendar, Brain, Volume2, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useGenerateQCM, useCreateRevisionPlan, useTutorSessions } from "@/hooks/useTutorIA";
+import { useGenerateQCM, useCreateRevisionPlan, useTutorSessions, TutorMode } from "@/hooks/useTutorIA";
 import { MarkdownMessage } from "@/components/MarkdownMessage";
+import { TutorHistory } from "@/components/tutor/TutorHistory";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Message = { role: "user" | "assistant"; content: string };
-type Mode = "conversation" | "explain" | "qcm" | "revise" | "summary" | "plan";
 
 const TuteurIA = () => {
   const navigate = useNavigate();
@@ -27,7 +27,7 @@ const TuteurIA = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedMode, setSelectedMode] = useState<Mode>("conversation");
+  const [selectedMode, setSelectedMode] = useState<TutorMode>("conversation");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [subject, setSubject] = useState<string>("maths");
   const [grade, setGrade] = useState<string>("3e");
@@ -37,13 +37,13 @@ const TuteurIA = () => {
   const generateQCM = useGenerateQCM();
   const createRevisionPlan = useCreateRevisionPlan();
 
-  const modes = [
-    { label: "Conversation", icon: <Bot className="w-4 h-4" />, value: "conversation" as Mode, description: "Discussion naturelle" },
-    { label: "Expliquer", icon: <BookOpen className="w-4 h-4" />, value: "explain" as Mode, description: "Explication détaillée" },
-    { label: "QCM", icon: <Target className="w-4 h-4" />, value: "qcm" as Mode, description: "Générer des exercices" },
-    { label: "Réviser", icon: <Brain className="w-4 h-4" />, value: "revise" as Mode, description: "Flashcards et résumés" },
-    { label: "Résumer", icon: <FileText className="w-4 h-4" />, value: "summary" as Mode, description: "Synthèse de documents" },
-    { label: "Planifier", icon: <Calendar className="w-4 h-4" />, value: "plan" as Mode, description: "Plan de révision" },
+  const modes: { label: string; icon: React.ReactNode; value: TutorMode; description: string }[] = [
+    { label: "Conversation", icon: <Bot className="w-4 h-4" />, value: "conversation", description: "Discussion naturelle" },
+    { label: "Expliquer", icon: <BookOpen className="w-4 h-4" />, value: "explain", description: "Explication détaillée" },
+    { label: "QCM", icon: <Target className="w-4 h-4" />, value: "qcm", description: "Générer des exercices" },
+    { label: "Réviser", icon: <Brain className="w-4 h-4" />, value: "revise", description: "Flashcards et résumés" },
+    { label: "Résumer", icon: <FileText className="w-4 h-4" />, value: "summary", description: "Synthèse de documents" },
+    { label: "Planifier", icon: <Calendar className="w-4 h-4" />, value: "plan", description: "Plan de révision" },
   ];
 
   const subjects = ["maths", "physique", "svt", "français", "histoire", "géographie", "anglais", "philo", "ses"];
@@ -153,14 +153,39 @@ const TuteurIA = () => {
     }
   };
 
+  const handleSelectSession = (sessionId: string, mode: TutorMode, messages: Message[]) => {
+    setSessionId(sessionId);
+    setSelectedMode(mode);
+    setMessages(messages.length > 0 ? messages : [{
+      role: "assistant",
+      content: "Bonjour ! 👋 Je suis votre Tuteur IA. Comment puis-je vous aider dans vos études aujourd'hui ?",
+    }]);
+  };
+
+  const handleNewSession = () => {
+    setSessionId(null);
+    setMessages([{
+      role: "assistant",
+      content: "Bonjour ! 👋 Je suis votre Tuteur IA. Comment puis-je vous aider dans vos études aujourd'hui ? Posez-moi une question, envoyez un PDF, ou choisissez un mode d'assistance.",
+    }]);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Button variant="ghost" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour au tableau de bord
           </Button>
+          <div className="flex items-center gap-2">
+            <TutorHistory
+              onSelectSession={handleSelectSession}
+              onNewSession={handleNewSession}
+              currentSessionId={sessionId}
+            />
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
@@ -177,7 +202,7 @@ const TuteurIA = () => {
           </p>
         </div>
 
-        <Tabs value={selectedMode} onValueChange={(v) => setSelectedMode(v as Mode)} className="space-y-6">
+        <Tabs value={selectedMode} onValueChange={(v) => setSelectedMode(v as TutorMode)} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
             {modes.map((mode) => (
               <TabsTrigger key={mode.value} value={mode.value} className="gap-2">
@@ -326,7 +351,7 @@ const TuteurIA = () => {
                           className="w-full justify-start text-sm"
                           onClick={() => {
                             setSessionId(session.id);
-                            setSelectedMode(session.mode as Mode);
+                            setSelectedMode(session.mode as TutorMode);
                             toast.info('Session chargée');
                           }}
                         >
