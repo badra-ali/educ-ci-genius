@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, BookOpen, Clock, MessageSquare, TrendingUp, Library, Bot, GraduationCap, ArrowRight, Target, Award, Sparkles, LogOut } from "lucide-react";
+import { Calendar, BookOpen, Clock, MessageSquare, TrendingUp, Library, Bot, GraduationCap, ArrowRight, Target, Award, Sparkles, LogOut, CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useStudentDashboard } from "@/hooks/useStudentDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { GamificationPanel } from "@/components/gamification/GamificationPanel";
+import { UnifiedCalendar } from "@/components/calendar/UnifiedCalendar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { supabase } from "@/integrations/supabase/client";
 
 const StudentDashboard = () => {
@@ -129,6 +131,7 @@ const StudentDashboard = () => {
                 </div>
               )}
               <div className="flex items-center gap-2 border-l pl-4 ml-2">
+                <ThemeToggle />
                 <NotificationBell />
                 <Button 
                   variant="ghost" 
@@ -193,6 +196,15 @@ const StudentDashboard = () => {
               );
             })}
           </div>
+        </div>
+
+        {/* Unified Calendar Section */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <CalendarDays className="w-6 h-6 text-primary" />
+            <h2 className="text-2xl font-bold">Calendrier</h2>
+          </div>
+          <UnifiedCalendar />
         </div>
 
         {/* Gamification Section */}
