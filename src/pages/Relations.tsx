@@ -7,7 +7,8 @@ import { ClassRelations } from "@/components/relations/ClassRelations";
 import { ClasseVirtuelleRelations } from "@/components/relations/ClasseVirtuelleRelations";
 import { SuiviScolaireRelations } from "@/components/relations/SuiviScolaireRelations";
 import { BibliothequeRelations } from "@/components/relations/BibliothequeRelations";
-import { Users, GraduationCap, School, UserCircle, BookOpen, ClipboardCheck, Library } from "lucide-react";
+import { TuteurIARelations } from "@/components/relations/TuteurIARelations";
+import { Users, GraduationCap, School, UserCircle, BookOpen, ClipboardCheck, Library, Bot } from "lucide-react";
 
 export default function Relations() {
   return (
@@ -20,38 +21,43 @@ export default function Relations() {
       </div>
 
       <Tabs defaultValue="classe-virtuelle" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
           <TabsTrigger value="classe-virtuelle" className="gap-2">
             <BookOpen className="h-4 w-4" />
-            <span className="hidden lg:inline">Classe Virtuelle</span>
-            <span className="lg:hidden">Cours</span>
+            <span className="hidden xl:inline">Classe Virtuelle</span>
+            <span className="xl:hidden">Cours</span>
           </TabsTrigger>
           <TabsTrigger value="suivi-scolaire" className="gap-2">
             <ClipboardCheck className="h-4 w-4" />
-            <span className="hidden lg:inline">Suivi Scolaire</span>
-            <span className="lg:hidden">Suivi</span>
+            <span className="hidden xl:inline">Suivi Scolaire</span>
+            <span className="xl:hidden">Suivi</span>
           </TabsTrigger>
           <TabsTrigger value="bibliotheque" className="gap-2">
             <Library className="h-4 w-4" />
-            <span className="hidden lg:inline">Bibliothèque</span>
-            <span className="lg:hidden">Biblio</span>
+            <span className="hidden xl:inline">Bibliothèque</span>
+            <span className="xl:hidden">Biblio</span>
+          </TabsTrigger>
+          <TabsTrigger value="tuteur-ia" className="gap-2">
+            <Bot className="h-4 w-4" />
+            <span className="hidden xl:inline">Tuteur IA</span>
+            <span className="xl:hidden">IA</span>
           </TabsTrigger>
           <TabsTrigger value="students" className="gap-2">
             <GraduationCap className="h-4 w-4" />
-            <span className="hidden lg:inline">Élèves</span>
+            <span className="hidden xl:inline">Élèves</span>
           </TabsTrigger>
           <TabsTrigger value="parents" className="gap-2">
             <UserCircle className="h-4 w-4" />
-            <span className="hidden lg:inline">Parents</span>
+            <span className="hidden xl:inline">Parents</span>
           </TabsTrigger>
           <TabsTrigger value="teachers" className="gap-2">
             <Users className="h-4 w-4" />
-            <span className="hidden lg:inline">Enseignants</span>
-            <span className="lg:hidden">Prof</span>
+            <span className="hidden xl:inline">Enseignants</span>
+            <span className="xl:hidden">Prof</span>
           </TabsTrigger>
           <TabsTrigger value="classes" className="gap-2">
             <School className="h-4 w-4" />
-            <span className="hidden lg:inline">Classes</span>
+            <span className="hidden xl:inline">Classes</span>
           </TabsTrigger>
         </TabsList>
 
@@ -93,6 +99,20 @@ export default function Relations() {
             </CardHeader>
             <CardContent>
               <BibliothequeRelations />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="tuteur-ia">
+          <Card>
+            <CardHeader>
+              <CardTitle>Relations Tuteur IA</CardTitle>
+              <CardDescription>
+                Session → Messages, QCM générés | Session → Resources RAG
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TuteurIARelations />
             </CardContent>
           </Card>
         </TabsContent>
