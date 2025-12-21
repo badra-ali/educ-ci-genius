@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar, BookOpen, Clock, MessageSquare, TrendingUp, Library, Bot, GraduationCap, ArrowRight, Target, Award, Sparkles } from "lucide-react";
+import { Calendar, BookOpen, Clock, MessageSquare, TrendingUp, Library, Bot, GraduationCap, ArrowRight, Target, Award, Sparkles, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useStudentDashboard } from "@/hooks/useStudentDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-
+import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { supabase } from "@/integrations/supabase/client";
 const StudentDashboard = () => {
   const navigate = useNavigate();
   const { data: dashboard, isLoading } = useStudentDashboard();
@@ -112,18 +113,33 @@ const StudentDashboard = () => {
                 </div>
               </div>
             </div>
-            {dashboard?.averageGrade && (
-              <div className="hidden md:flex items-center gap-6">
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Moyenne générale</p>
-                  <p className="text-3xl font-bold text-primary">{dashboard.averageGrade.toFixed(1)}<span className="text-lg text-muted-foreground">/20</span></p>
+            <div className="flex items-center gap-4">
+              {dashboard?.averageGrade && (
+                <div className="hidden md:flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Moyenne générale</p>
+                    <p className="text-3xl font-bold text-primary">{dashboard.averageGrade.toFixed(1)}<span className="text-lg text-muted-foreground">/20</span></p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-muted-foreground">Assiduité</p>
+                    <p className="text-3xl font-bold text-secondary">{dashboard.attendanceRate?.toFixed(0) || 0}<span className="text-lg text-muted-foreground">%</span></p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Assiduité</p>
-                  <p className="text-3xl font-bold text-secondary">{dashboard.attendanceRate?.toFixed(0) || 0}<span className="text-lg text-muted-foreground">%</span></p>
-                </div>
+              )}
+              <div className="flex items-center gap-2 border-l pl-4 ml-2">
+                <NotificationBell />
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => {
+                    supabase.auth.signOut();
+                    navigate('/');
+                  }}
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
               </div>
-            )}
+            </div>
           </div>
         </div>
       </header>
