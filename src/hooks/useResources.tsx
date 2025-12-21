@@ -30,6 +30,113 @@ export interface SearchFilters {
   audioOnly?: boolean;
 }
 
+// Hook pour récupérer le profil utilisateur avec son niveau et ses matières
+export const useUserProfile = () => {
+  return useQuery({
+    queryKey: ["user-profile-for-recommendations"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      // Récupérer le niveau de l'élève via sa classe
+      const { data: eleveClasse } = await supabase
+        .from("eleve_classes")
+        .select(`
+          classe_id,
+          classes:classe_id (
+            niveau,
+            nom
+          )
+        `)
+        .eq("user_id", user.id)
+        .eq("actif", true)
+        .maybeSingle();
+
+      // Récupérer les matières de l'élève via les notes ou les cours
+      const { data: grades } = await supabase
+        .from("grades")
+        .select(`
+          matiere_id,
+          matieres:matiere_id (
+            nom
+          )
+        `)
+        .eq("student_id", user.id)
+        .limit(10);
+
+      // Extraire les matières uniques
+      const matieres = [...new Set(
+        grades?.map(g => g.matieres?.nom).filter(Boolean) || []
+      )];
+
+      // Mapper le niveau de classe vers le niveau de ressource
+      let level: string | null = null;
+      if (eleveClasse?.classes) {
+        const classeNiveau = (eleveClasse.classes as { niveau?: string })?.niveau?.toLowerCase() || '';
+        if (classeNiveau.includes('primaire') || classeNiveau.includes('cm') || classeNiveau.includes('ce')) {
+          level = 'Primaire';
+        } else if (classeNiveau.includes('collège') || classeNiveau.includes('6') || classeNiveau.includes('5') || classeNiveau.includes('4') || classeNiveau.includes('3')) {
+          level = 'Collège';
+        } else if (classeNiveau.includes('lycée') || classeNiveau.includes('seconde') || classeNiveau.includes('première') || classeNiveau.includes('terminale')) {
+          level = 'Lycée';
+        }
+      }
+
+      return {
+        level,
+        subjects: matieres as string[],
+        classeName: (eleveClasse?.classes as { nom?: string })?.nom || null
+      };
+    },
+  });
+};
+
+// Hook pour récupérer les recommandations personnalisées
+export const useRecommendedResources = () => {
+  const { data: profile } = useUserProfile();
+
+  return useQuery({
+    queryKey: ["recommended-resources", profile?.level, profile?.subjects],
+    queryFn: async () => {
+      if (!profile?.level && (!profile?.subjects || profile.subjects.length === 0)) {
+        // Si pas de profil, retourner les ressources populaires
+        const { data, error } = await supabase
+          .from("resources")
+          .select("*")
+          .eq("is_public", true)
+          .order("views_count", { ascending: false })
+          .limit(8);
+
+        if (error) throw error;
+        return data as Resource[];
+      }
+
+      let query = supabase
+        .from("resources")
+        .select("*")
+        .eq("is_public", true);
+
+      // Filtrer par niveau si disponible
+      if (profile?.level) {
+        query = query.eq("level", profile.level);
+      }
+
+      // Filtrer par matières si disponibles
+      if (profile?.subjects && profile.subjects.length > 0) {
+        query = query.in("subject", profile.subjects);
+      }
+
+      query = query.order("views_count", { ascending: false }).limit(8);
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data as Resource[];
+    },
+    enabled: profile !== undefined,
+  });
+};
+
 export const useResources = (filters?: SearchFilters) => {
   return useQuery({
     queryKey: ["resources", filters],
