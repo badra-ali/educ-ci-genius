@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useNavigate } from "react-router-dom";
-import { BookOpen, Calendar, GraduationCap, Library, Bot, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Calendar, GraduationCap, Library, Bot, ArrowRight, CheckCircle2 } from "lucide-react";
 import Autoplay from "embla-carousel-autoplay";
 import { useRef } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import moduleClasse from "@/assets/module-classe.jpg";
 import moduleSuivi from "@/assets/module-suivi.jpg";
 import moduleBibliotheque from "@/assets/module-bibliotheque.jpg";
@@ -87,6 +88,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Header with Theme Toggle */}
+      <header className="absolute top-0 left-0 right-0 z-50 p-4 flex justify-end">
+        <ThemeToggle />
+      </header>
+
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <Carousel
