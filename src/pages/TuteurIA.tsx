@@ -154,13 +154,19 @@ const TuteurIA = () => {
     }
   };
 
-  const handleSelectSession = (sessionId: string, mode: TutorMode, messages: Message[]) => {
+  const handleSelectSession = (sessionId: string, mode: TutorMode, sessionMessages: Message[]) => {
     setSessionId(sessionId);
     setSelectedMode(mode);
-    setMessages(messages.length > 0 ? messages : [{
-      role: "assistant",
-      content: "Bonjour ! 👋 Je suis votre Tuteur IA. Comment puis-je vous aider dans vos études aujourd'hui ?",
-    }]);
+    // Filtrer les messages système et ne garder que user/assistant
+    const validMessages = sessionMessages.filter(m => m.role === "user" || m.role === "assistant");
+    if (validMessages.length > 0) {
+      setMessages(validMessages);
+    } else {
+      setMessages([{
+        role: "assistant",
+        content: "Bonjour ! 👋 Je suis votre Tuteur IA. Comment puis-je vous aider dans vos études aujourd'hui ?",
+      }]);
+    }
   };
 
   const handleNewSession = () => {
@@ -248,7 +254,7 @@ const TuteurIA = () => {
                   </div>
                 </CardHeader>
 
-                <ScrollArea className="flex-1 p-6">
+                <div className="flex-1 overflow-y-auto p-6">
                   <div className="space-y-4">
                     {messages.map((message, index) => (
                       <div
@@ -277,7 +283,7 @@ const TuteurIA = () => {
                     )}
                     <div ref={scrollRef} />
                   </div>
-                </ScrollArea>
+                </div>
 
                 <div className="border-t p-4">
                   <div className="flex gap-2">
