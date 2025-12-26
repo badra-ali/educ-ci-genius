@@ -18,6 +18,7 @@ import Install from "./pages/Install";
 import ListeCours from "./pages/ListeCours";
 import CoursDetail from "./pages/CoursDetail";
 import CreerCours from "./pages/CreerCours";
+import EditCours from "./pages/EditCours";
 import CreerQcm from "./pages/CreerQcm";
 import PasserQcm from "./pages/PasserQcm";
 import DevoirDetail from "./pages/DevoirDetail";
@@ -99,6 +100,16 @@ const App = () => (
                 <ProtectedRoute>
                   <RoleGate allowedRoles={["ENSEIGNANT", "ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
                     <CreerCours />
+                  </RoleGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cours/:id/edit"
+              element={
+                <ProtectedRoute>
+                  <RoleGate allowedRoles={["ENSEIGNANT", "ADMIN_ECOLE", "ADMIN_SYSTEME"]}>
+                    <EditCours />
                   </RoleGate>
                 </ProtectedRoute>
               }

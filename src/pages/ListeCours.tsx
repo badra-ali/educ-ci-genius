@@ -4,24 +4,43 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Search, BookOpen, Clock } from "lucide-react";
+import { ArrowLeft, Plus, Search, BookOpen, Clock, Trash2, Pencil } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useCours } from "@/hooks/useCours";
 import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
 
 const ListeCours = () => {
   const navigate = useNavigate();
-  const { coursList, loading, fetchCoursList } = useCours();
+  const { coursList, loading, fetchCoursList, deleteCours } = useCours();
   const { primaryRole } = useUserRole();
   const [searchTerm, setSearchTerm] = useState("");
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCoursList();
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
   }, []);
 
   const filteredCours = coursList.filter(cours =>
     cours.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     cours.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDelete = async (e: React.MouseEvent, coursId: string) => {
+    e.stopPropagation();
+    setDeletingId(coursId);
+    const success = await deleteCours(coursId);
+    setDeletingId(null);
+    if (success) {
+      fetchCoursList();
+    }
+  };
+
+  const isOwner = (enseignantId: string) => currentUserId === enseignantId;
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,7 +93,7 @@ const ListeCours = () => {
             {filteredCours.map((cours) => (
               <Card
                 key={cours.id}
-                className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1"
+                className="cursor-pointer hover:shadow-lg transition-all hover:-translate-y-1 relative group"
                 onClick={() => navigate(`/classe/${cours.id}`)}
               >
                 <CardHeader>
@@ -106,6 +125,57 @@ const ListeCours = () => {
                       </span>
                     </div>
                   </div>
+                  
+                  {/* Actions pour le propriétaire du cours */}
+                  {isOwner(cours.enseignant_id) && (
+                    <div className="flex gap-2 mt-4 pt-4 border-t">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/cours/${cours.id}/edit`);
+                        }}
+                      >
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Modifier
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            className="flex-1"
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={deletingId === cours.id}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Supprimer
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Supprimer ce cours ?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Cette action est irréversible. Le cours "{cours.titre}" sera définitivement supprimé.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                              Annuler
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={(e) => handleDelete(e, cours.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Supprimer
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
