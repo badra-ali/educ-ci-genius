@@ -184,13 +184,32 @@ const CreerCours = () => {
       toast.error("Session expirée, veuillez vous reconnecter");
       return;
     }
-    try {
-      await supabase.rpc('update_user_etablissement', {
-        _user_id: userId,
-        _etablissement_id: etablissement,
-      });
-    } catch (e) {
-      // On ignore si déjà aligné
+    
+    // Vérifier que l'utilisateur a bien un rôle ENSEIGNANT
+    const { data: userRole, error: roleError } = await supabase
+      .from("user_roles")
+      .select("id, etablissement_id")
+      .eq("user_id", userId)
+      .eq("role", "ENSEIGNANT")
+      .maybeSingle();
+    
+    if (!userRole) {
+      toast.error("Vous n'avez pas les droits enseignant");
+      return;
+    }
+    
+    // Mettre à jour l'établissement si nécessaire
+    if (!userRole.etablissement_id || userRole.etablissement_id !== etablissement) {
+      const { error: updateError } = await supabase
+        .from("user_roles")
+        .update({ etablissement_id: etablissement })
+        .eq("id", userRole.id);
+      
+      if (updateError) {
+        console.error("Erreur mise à jour établissement:", updateError);
+        toast.error("Impossible d'assigner l'établissement");
+        return;
+      }
     }
 
     // Validation
