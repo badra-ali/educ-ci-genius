@@ -33,14 +33,28 @@ export const useCours = (coursId?: string) => {
         .from("cours")
         .select(`
           *,
-          matieres (nom, code),
-          profiles (first_name, last_name)
+          matieres (nom, code)
         `)
         .eq("id", id)
         .single();
 
       if (error) throw error;
-      setCours(data as any);
+      
+      // Récupérer le profil de l'enseignant séparément
+      let coursWithProfile = data as any;
+      if (data?.enseignant_id) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("first_name, last_name")
+          .eq("id", data.enseignant_id)
+          .single();
+        
+        if (profileData) {
+          coursWithProfile = { ...data, profiles: profileData };
+        }
+      }
+      
+      setCours(coursWithProfile);
     } catch (error: any) {
       console.error("Erreur chargement cours:", error);
       toast.error("Impossible de charger le cours");
@@ -61,8 +75,7 @@ export const useCours = (coursId?: string) => {
         .from("cours")
         .select(`
           *,
-          matieres (nom, code),
-          profiles (first_name, last_name)
+          matieres (nom, code)
         `)
         .eq("statut", "publie")
         .order("created_at", { ascending: false });
@@ -78,7 +91,28 @@ export const useCours = (coursId?: string) => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setCoursList(data as any);
+      
+      // Récupérer les profils des enseignants
+      const enseignantIds = [...new Set((data || []).map((c: any) => c.enseignant_id).filter(Boolean))];
+      let profilesMap: Record<string, any> = {};
+      
+      if (enseignantIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", enseignantIds);
+        
+        if (profiles) {
+          profilesMap = Object.fromEntries(profiles.map(p => [p.id, p]));
+        }
+      }
+      
+      const coursWithProfiles = (data || []).map((c: any) => ({
+        ...c,
+        profiles: profilesMap[c.enseignant_id] || null
+      }));
+      
+      setCoursList(coursWithProfiles);
     } catch (error: any) {
       console.error("Erreur chargement liste cours:", error);
       toast.error("Impossible de charger les cours");
