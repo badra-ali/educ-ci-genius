@@ -40,17 +40,20 @@ export const useCours = (coursId?: string) => {
 
       if (error) throw error;
       
-      // Récupérer le profil de l'enseignant séparément
+      // Récupérer le profil de l'enseignant séparément (peut échouer si RLS bloque)
       let coursWithProfile = data as any;
       if (data?.enseignant_id) {
-        const { data: profileData } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from("profiles")
           .select("first_name, last_name")
           .eq("id", data.enseignant_id)
-          .single();
+          .maybeSingle();
         
         if (profileData) {
           coursWithProfile = { ...data, profiles: profileData };
+        } else {
+          // Profil non accessible via RLS, utiliser des valeurs par défaut
+          coursWithProfile = { ...data, profiles: { first_name: "Enseignant", last_name: "" } };
         }
       }
       
