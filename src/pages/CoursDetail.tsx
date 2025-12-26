@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Video, MessageSquare, FileText, ClipboardList, ExternalLink } from "lucide-react";
+import { ArrowLeft, Video, MessageSquare, FileText, ClipboardList, ExternalLink, Trash2 } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { supabase } from "@/integrations/supabase/client";
 import { useCours } from "@/hooks/useCours";
 import { useQcm } from "@/hooks/useQcm";
 import { useDevoirs } from "@/hooks/useDevoirs";
@@ -13,9 +15,17 @@ import Forum from "./Forum";
 const CoursDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { cours, loading: coursLoading, fetchCours } = useCours(id);
+  const { cours, loading: coursLoading, fetchCours, deleteCours } = useCours(id);
   const { qcmList, fetchQcmList } = useQcm();
   const { devoirsList, fetchDevoirsList } = useDevoirs();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null);
+    });
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -61,9 +71,45 @@ const CoursDetail = () => {
                 </p>
               </div>
             </div>
-            <Badge variant={cours.statut === 'publie' ? 'default' : 'secondary'}>
-              {cours.statut}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant={cours.statut === 'publie' ? 'default' : 'secondary'}>
+                {cours.statut}
+              </Badge>
+              {currentUserId === cours.enseignant_id && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm" disabled={isDeleting}>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Supprimer
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Supprimer ce cours ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Cette action est irréversible. Le cours "{cours.titre}" sera définitivement supprimé avec tout son contenu.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Annuler</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={async () => {
+                          setIsDeleting(true);
+                          const success = await deleteCours(cours.id);
+                          setIsDeleting(false);
+                          if (success) {
+                            navigate("/classe");
+                          }
+                        }}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Supprimer
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+            </div>
           </div>
         </div>
       </header>
