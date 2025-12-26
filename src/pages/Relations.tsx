@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { StudentRelations } from "@/components/relations/StudentRelations";
@@ -8,19 +9,179 @@ import { ClasseVirtuelleRelations } from "@/components/relations/ClasseVirtuelle
 import { SuiviScolaireRelations } from "@/components/relations/SuiviScolaireRelations";
 import { BibliothequeRelations } from "@/components/relations/BibliothequeRelations";
 import { TuteurIARelations } from "@/components/relations/TuteurIARelations";
-import { Users, GraduationCap, School, UserCircle, BookOpen, ClipboardCheck, Library, Bot } from "lucide-react";
+import { RelationsDiagram } from "@/components/relations/RelationsDiagram";
+import { RelationsFilters, RelationsFiltersState, defaultFilters } from "@/components/relations/RelationsFilters";
+import { ExportMenu } from "@/components/relations/ExportMenu";
+import { Users, GraduationCap, School, UserCircle, BookOpen, ClipboardCheck, Library, Bot, LayoutGrid } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useCoursWithRelations, useClasseVirtuelleStats } from "@/hooks/useClasseVirtuelleRelations";
+import { useSuiviScolaireStats, useElevesWithRelations } from "@/hooks/useSuiviScolaireRelations";
+import { useBibliothequeRelations } from "@/hooks/useBibliothequeRelations";
+import { useTuteurIARelations } from "@/hooks/useTuteurIARelations";
 
 export default function Relations() {
+  const [activeTab, setActiveTab] = useState("classe-virtuelle");
+  const [filters, setFilters] = useState<RelationsFiltersState>(defaultFilters);
+  const [showDiagram, setShowDiagram] = useState(false);
+
+  // Fetch data for exports
+  const { data: coursData } = useCoursWithRelations();
+  const { data: classeVirtuelleStats } = useClasseVirtuelleStats();
+  const { data: suiviStats } = useSuiviScolaireStats();
+  const { data: elevesData } = useElevesWithRelations();
+  const { data: resourcesData } = useBibliothequeRelations();
+  const { data: tuteurData } = useTuteurIARelations();
+
+  // Export columns definitions
+  const coursExportColumns = [
+    { key: 'titre', label: 'Titre' },
+    { key: 'matiere', label: 'Matière', format: (v: any) => v?.nom || '-' },
+    { key: 'enseignant', label: 'Enseignant', format: (v: any) => v ? `${v.first_name} ${v.last_name}` : '-' },
+    { key: 'classes', label: 'Classes', format: (v: any[]) => v?.length || 0 },
+    { key: 'devoirs', label: 'Devoirs', format: (v: any[]) => v?.length || 0 },
+    { key: 'qcms', label: 'QCMs', format: (v: any[]) => v?.length || 0 },
+  ];
+
+  const elevesExportColumns = [
+    { key: 'first_name', label: 'Prénom' },
+    { key: 'last_name', label: 'Nom' },
+    { key: 'classe', label: 'Classe', format: (v: any) => v?.nom || '-' },
+    { key: 'notes_count', label: 'Nb Notes' },
+    { key: 'moyenne', label: 'Moyenne', format: (v: number | null) => v !== null ? `${v}/20` : '-' },
+    { key: 'taux_presence', label: 'Présence', format: (v: number) => `${v}%` },
+  ];
+
+  const resourcesExportColumns = [
+    { key: 'title', label: 'Titre' },
+    { key: 'author', label: 'Auteur' },
+    { key: 'type', label: 'Type' },
+    { key: 'level', label: 'Niveau' },
+    { key: 'subject', label: 'Matière' },
+    { key: 'sections_count', label: 'Sections' },
+    { key: 'readers_count', label: 'Lecteurs' },
+    { key: 'highlights_count', label: 'Annotations' },
+  ];
+
+  const sessionsExportColumns = [
+    { key: 'title', label: 'Titre', format: (v: string | null) => v || 'Session sans titre' },
+    { key: 'mode', label: 'Mode' },
+    { key: 'subject', label: 'Matière', format: (v: string | null) => v || '-' },
+    { key: 'grade', label: 'Niveau', format: (v: string | null) => v || '-' },
+    { key: 'messages_count', label: 'Messages' },
+    { key: 'qcms_count', label: 'QCMs générés' },
+  ];
+
+  const getExportData = () => {
+    switch (activeTab) {
+      case 'classe-virtuelle':
+        return { data: coursData || [], columns: coursExportColumns, filename: 'cours-relations', title: 'Relations Classe Virtuelle' };
+      case 'suivi-scolaire':
+        return { data: elevesData || [], columns: elevesExportColumns, filename: 'eleves-suivi', title: 'Suivi Scolaire' };
+      case 'bibliotheque':
+        return { data: resourcesData || [], columns: resourcesExportColumns, filename: 'ressources-relations', title: 'Relations Bibliothèque' };
+      case 'tuteur-ia':
+        return { data: tuteurData?.sessions || [], columns: sessionsExportColumns, filename: 'sessions-tuteur-ia', title: 'Sessions Tuteur IA' };
+      default:
+        return null;
+    }
+  };
+
+  const getDiagramStats = () => {
+    switch (activeTab) {
+      case 'classe-virtuelle':
+        return classeVirtuelleStats ? {
+          cours: classeVirtuelleStats.coursCount,
+          devoirs: classeVirtuelleStats.devoirsCount,
+          qcms: classeVirtuelleStats.qcmsCount,
+          rendus: classeVirtuelleStats.rendusCount,
+          tentatives: classeVirtuelleStats.tentativesCount,
+        } : undefined;
+      case 'suivi-scolaire':
+        return suiviStats ? {
+          eleves: suiviStats.elevesCount,
+          notes: suiviStats.notesCount,
+          presences: suiviStats.presencesCount,
+          edt: suiviStats.schedulesCount,
+          bulletins: suiviStats.bulletinsCount,
+        } : undefined;
+      case 'bibliotheque':
+        const resources = resourcesData || [];
+        return {
+          resources: resources.length,
+          sections: resources.reduce((sum, r) => sum + r.sections_count, 0),
+          lectures: resources.reduce((sum, r) => sum + r.readers_count, 0),
+          annotations: resources.reduce((sum, r) => sum + r.highlights_count, 0),
+          embeddings: resources.reduce((sum, r) => sum + r.embeddings_count, 0),
+        };
+      case 'tuteur-ia':
+        return tuteurData?.stats ? {
+          sessions: tuteurData.stats.totalSessions,
+          messages: tuteurData.stats.totalMessages,
+          qcms: tuteurData.stats.totalQcms,
+        } : undefined;
+      default:
+        return undefined;
+    }
+  };
+
+  const exportData = getExportData();
+  const diagramModule = ['classe-virtuelle', 'suivi-scolaire', 'bibliotheque', 'tuteur-ia'].includes(activeTab) 
+    ? activeTab as 'classe-virtuelle' | 'suivi-scolaire' | 'bibliotheque' | 'tuteur-ia'
+    : null;
+
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Gestion des Relations</h1>
-        <p className="text-muted-foreground mt-2">
-          Gérez les liens entre élèves, parents, enseignants et classes
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Gestion des Relations</h1>
+          <p className="text-muted-foreground mt-2">
+            Gérez les liens entre élèves, parents, enseignants et classes
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {diagramModule && (
+            <Button
+              variant={showDiagram ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowDiagram(!showDiagram)}
+              className="gap-2"
+            >
+              <LayoutGrid className="h-4 w-4" />
+              {showDiagram ? "Masquer diagramme" : "Voir diagramme"}
+            </Button>
+          )}
+          {exportData && (
+            <ExportMenu
+              data={exportData.data}
+              columns={exportData.columns}
+              filename={exportData.filename}
+              title={exportData.title}
+            />
+          )}
+        </div>
       </div>
 
-      <Tabs defaultValue="classe-virtuelle" className="space-y-6">
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-4">
+        <RelationsFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+          showEtablissement={true}
+          showAnnee={true}
+          showPeriode={['suivi-scolaire'].includes(activeTab)}
+          showNiveau={['suivi-scolaire', 'bibliotheque'].includes(activeTab)}
+        />
+      </div>
+
+      {/* Diagram */}
+      {showDiagram && diagramModule && (
+        <RelationsDiagram 
+          module={diagramModule} 
+          stats={getDiagramStats()}
+        />
+      )}
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
           <TabsTrigger value="classe-virtuelle" className="gap-2">
             <BookOpen className="h-4 w-4" />
