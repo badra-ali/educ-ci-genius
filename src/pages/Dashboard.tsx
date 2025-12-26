@@ -69,6 +69,11 @@ const Dashboard = () => {
           return;
         }
 
+        if (role === 'PARENT') {
+          navigate("/app/parent");
+          return;
+        }
+
         // Charger les statistiques pour les autres rôles
         await loadStats(user.id);
       }
