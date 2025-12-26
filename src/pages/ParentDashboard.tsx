@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { LinkChildDialog } from "@/components/parent/LinkChildDialog";
 
 export default function ParentDashboard() {
   const { data: children, isLoading: childrenLoading } = useChildren();
@@ -86,9 +87,12 @@ export default function ParentDashboard() {
           <CardHeader>
             <CardTitle>Aucun enfant associé</CardTitle>
             <CardDescription>
-              Vous n'avez pas d'enfant associé à votre compte. Contactez l'administration.
+              Associez votre enfant à votre compte pour suivre sa scolarité.
             </CardDescription>
           </CardHeader>
+          <CardContent>
+            <LinkChildDialog />
+          </CardContent>
         </Card>
       </div>
     );
