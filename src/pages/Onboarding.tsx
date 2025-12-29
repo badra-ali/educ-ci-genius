@@ -122,46 +122,19 @@ const Onboarding = () => {
   };
 
   const fetchEleves = async () => {
-    // Liste fictive d'élèves pour les tests
-    const elevesTest = [
-      { id: "1", first_name: "Marie", last_name: "Kouassi" },
-      { id: "2", first_name: "Jean", last_name: "Koné" },
-      { id: "3", first_name: "Fatou", last_name: "Diallo" },
-      { id: "4", first_name: "Amadou", last_name: "Traoré" },
-      { id: "5", first_name: "Aïcha", last_name: "Bamba" },
-      { id: "6", first_name: "Ibrahim", last_name: "Touré" },
-      { id: "7", first_name: "Kadiatou", last_name: "Sanogo" },
-      { id: "8", first_name: "Moussa", last_name: "Coulibaly" },
-    ];
-    
-    setEleves(elevesTest);
-    
-    /* Version réelle à activer plus tard:
+    // Récupérer les vrais élèves depuis la vue students_view
     const { data, error } = await supabase
-      .from("user_roles")
-      .select(`
-        user_id,
-        profiles!inner(id, first_name, last_name)
-      `)
-      .eq("role", "ELEVE");
+      .from("students_view")
+      .select("id, first_name, last_name, classe_nom, classe_niveau")
+      .order("first_name");
     
     if (error) {
       console.error("Erreur chargement élèves:", error);
+      toast.error("Erreur de chargement des élèves");
       return;
     }
     
-    const uniqueEleves = data?.map((item: any) => ({
-      id: item.user_id,
-      first_name: item.profiles.first_name,
-      last_name: item.profiles.last_name,
-    })).sort((a: any, b: any) => {
-      const nameA = `${a.first_name} ${a.last_name}`.toLowerCase();
-      const nameB = `${b.first_name} ${b.last_name}`.toLowerCase();
-      return nameA.localeCompare(nameB);
-    });
-    
-    setEleves(uniqueEleves || []);
-    */
+    setEleves(data || []);
   };
 
   const handleStep1Submit = async (e: React.FormEvent) => {
@@ -268,24 +241,16 @@ const Onboarding = () => {
           return;
         }
         
-        // Vérifier si c'est un ID fictif (pour les tests)
-        const isFictifId = !selectedEleve.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        // Lier le parent à l'élève
+        const { error } = await supabase
+          .from("parent_eleves")
+          .insert({
+            parent_id: user.id,
+            eleve_id: selectedEleve,
+            lien_parente: lienParente,
+          });
         
-        if (isFictifId) {
-          // Mode test : on marque juste l'onboarding comme complété
-          toast.success("Configuration terminée (mode test)");
-        } else {
-          // Mode réel : lier le parent à l'élève
-          const { error } = await supabase
-            .from("parent_eleves")
-            .insert({
-              parent_id: user.id,
-              eleve_id: selectedEleve,
-              lien_parente: lienParente,
-            });
-          
-          if (error) throw error;
-        }
+        if (error) throw error;
       }
       
       // Marquer l'onboarding comme complété
@@ -489,6 +454,11 @@ const Onboarding = () => {
                               <p className="font-medium">
                                 {eleve.first_name} {eleve.last_name}
                               </p>
+                              {eleve.classe_nom && (
+                                <p className="text-sm text-muted-foreground">
+                                  {eleve.classe_niveau} - {eleve.classe_nom}
+                                </p>
+                              )}
                             </div>
                             {selectedEleve === eleve.id && (
                               <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
