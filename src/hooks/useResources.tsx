@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useUserRole } from "./useUserRole";
 
 export interface Resource {
   id: string;
@@ -29,6 +30,59 @@ export interface SearchFilters {
   type?: string;
   audioOnly?: boolean;
 }
+
+// Helper pour mapper les niveaux de classe vers les niveaux de ressources
+const mapClassLevelToResourceLevel = (classeNiveau: string): string | null => {
+  const niveau = classeNiveau.toLowerCase();
+  if (niveau.includes('primaire') || niveau.includes('cm') || niveau.includes('ce') || niveau.includes('cp')) {
+    return 'Primaire';
+  } else if (niveau.includes('collège') || niveau.includes('6') || niveau.includes('5') || niveau.includes('4') || niveau.includes('3')) {
+    return 'Collège';
+  } else if (niveau.includes('lycée') || niveau.includes('seconde') || niveau.includes('première') || niveau.includes('terminale')) {
+    return 'Lycée';
+  }
+  return null;
+};
+
+// Hook pour récupérer les niveaux des classes de l'enseignant
+export const useTeacherClassLevels = () => {
+  return useQuery({
+    queryKey: ["teacher-class-levels"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      // Récupérer les classes où l'enseignant enseigne
+      const { data: enseignantMatieres, error } = await supabase
+        .from("enseignant_matieres")
+        .select(`
+          classe_id,
+          classes:classe_id (
+            niveau,
+            nom
+          )
+        `)
+        .eq("user_id", user.id)
+        .eq("annee_scolaire", "2024-2025");
+
+      if (error) throw error;
+
+      // Extraire les niveaux uniques et les mapper
+      const levels = new Set<string>();
+      enseignantMatieres?.forEach(em => {
+        if (em.classes) {
+          const classeNiveau = (em.classes as { niveau?: string })?.niveau || '';
+          const resourceLevel = mapClassLevelToResourceLevel(classeNiveau);
+          if (resourceLevel) {
+            levels.add(resourceLevel);
+          }
+        }
+      });
+
+      return Array.from(levels);
+    },
+  });
+};
 
 // Hook pour récupérer le profil utilisateur avec son niveau et ses matières
 export const useUserProfile = () => {
@@ -73,13 +127,7 @@ export const useUserProfile = () => {
       let level: string | null = null;
       if (eleveClasse?.classes) {
         const classeNiveau = (eleveClasse.classes as { niveau?: string })?.niveau?.toLowerCase() || '';
-        if (classeNiveau.includes('primaire') || classeNiveau.includes('cm') || classeNiveau.includes('ce')) {
-          level = 'Primaire';
-        } else if (classeNiveau.includes('collège') || classeNiveau.includes('6') || classeNiveau.includes('5') || classeNiveau.includes('4') || classeNiveau.includes('3')) {
-          level = 'Collège';
-        } else if (classeNiveau.includes('lycée') || classeNiveau.includes('seconde') || classeNiveau.includes('première') || classeNiveau.includes('terminale')) {
-          level = 'Lycée';
-        }
+        level = mapClassLevelToResourceLevel(classeNiveau);
       }
 
       return {
@@ -88,6 +136,64 @@ export const useUserProfile = () => {
         classeName: (eleveClasse?.classes as { nom?: string })?.nom || null
       };
     },
+  });
+};
+
+// Hook pour les ressources filtrées par rôle
+export const useResourcesForRole = (filters?: SearchFilters) => {
+  const { primaryRole } = useUserRole();
+  const { data: teacherLevels } = useTeacherClassLevels();
+
+  return useQuery({
+    queryKey: ["resources-for-role", filters, primaryRole, teacherLevels],
+    queryFn: async () => {
+      let query = supabase
+        .from("resources")
+        .select("*")
+        .eq("is_public", true)
+        .order("created_at", { ascending: false });
+
+      // Pour les enseignants, filtrer par les niveaux de leurs classes
+      if (primaryRole === "ENSEIGNANT" && teacherLevels && teacherLevels.length > 0) {
+        // Si un niveau spécifique est sélectionné dans les filtres
+        if (filters?.level && filters.level !== 'Tous') {
+          // Vérifier que ce niveau est dans les niveaux autorisés
+          if (teacherLevels.includes(filters.level)) {
+            query = query.eq("level", filters.level);
+          } else {
+            // L'enseignant n'a pas accès à ce niveau
+            return [];
+          }
+        } else {
+          // Sinon, filtrer par tous les niveaux autorisés
+          query = query.in("level", teacherLevels);
+        }
+      } else if (filters?.level && filters.level !== 'Tous') {
+        query = query.eq("level", filters.level);
+      }
+
+      if (filters?.subject) {
+        query = query.eq("subject", filters.subject);
+      }
+
+      if (filters?.type) {
+        query = query.eq("type", filters.type);
+      }
+
+      if (filters?.audioOnly) {
+        query = query.eq("audio_available", true);
+      }
+
+      if (filters?.query) {
+        query = query.or(`title.ilike.%${filters.query}%,author.ilike.%${filters.query}%,summary.ilike.%${filters.query}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data as Resource[];
+    },
+    enabled: primaryRole !== "ENSEIGNANT" || teacherLevels !== undefined,
   });
 };
 
