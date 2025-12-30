@@ -2,14 +2,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Search, Sparkles, TrendingUp, WifiOff, Trash2, HardDrive } from "lucide-react";
+import { ArrowLeft, Search, Sparkles, TrendingUp, WifiOff, Trash2, HardDrive, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { useResources, useUserShelves, useAddToShelf, useRecommendedResources, useUserProfile } from "@/hooks/useResources";
+import { useResourcesForRole, useUserShelves, useAddToShelf, useRecommendedResources, useUserProfile, useTeacherClassLevels } from "@/hooks/useResources";
 import { ResourceCard } from "@/components/library/ResourceCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOfflineResources } from "@/hooks/useOfflineResources";
 import { Progress } from "@/components/ui/progress";
+import { useUserRole } from "@/hooks/useUserRole";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Bibliotheque = () => {
   const navigate = useNavigate();
@@ -18,7 +20,10 @@ const Bibliotheque = () => {
   const [audioOnly, setAudioOnly] = useState(false);
   const [showOfflineSection, setShowOfflineSection] = useState(false);
 
-  const { data: resources, isLoading } = useResources({
+  const { primaryRole } = useUserRole();
+  const { data: teacherLevels } = useTeacherClassLevels();
+  
+  const { data: resources, isLoading } = useResourcesForRole({
     query: searchQuery,
     level: selectedLevel,
     audioOnly,
@@ -43,7 +48,14 @@ const Bibliotheque = () => {
     shelves?.filter(s => s.shelf === 'FAVORI').map(s => s.resource_id) || []
   );
 
-  const levels = ["Tous", "Primaire", "Collège", "Lycée"];
+  // Niveaux disponibles selon le rôle
+  const allLevels = ["Tous", "Primaire", "Collège", "Lycée"];
+  const isTeacher = primaryRole === "ENSEIGNANT";
+  
+  // Pour les enseignants, ne montrer que les niveaux de leurs classes
+  const levels = isTeacher && teacherLevels && teacherLevels.length > 0
+    ? ["Tous", ...teacherLevels]
+    : allLevels;
 
   // Ne pas afficher les recommandations si une recherche est en cours
   const showRecommendations = !searchQuery && selectedLevel === "Tous" && !audioOnly && !showOfflineSection;
@@ -67,6 +79,16 @@ const Bibliotheque = () => {
           </p>
         </div>
 
+        {/* Info pour les enseignants */}
+        {isTeacher && teacherLevels && teacherLevels.length > 0 && (
+          <Alert className="mb-6">
+            <Info className="h-4 w-4" />
+            <AlertDescription>
+              Vous avez accès aux ressources de niveau{teacherLevels.length > 1 ? 'x' : ''} : <strong>{teacherLevels.join(", ")}</strong> (selon vos classes)
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Search Bar */}
         <div className="mb-8">
           <div className="relative">
@@ -79,7 +101,6 @@ const Bibliotheque = () => {
             />
           </div>
         </div>
-
         {/* Filters */}
         <div className="flex gap-2 mb-8 flex-wrap items-center">
           {levels.map((level) => (
