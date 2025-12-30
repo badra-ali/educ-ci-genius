@@ -163,7 +163,7 @@ const Dashboard = () => {
   const firstName = profile?.first_name || user?.user_metadata?.first_name || "Utilisateur";
   const lastName = profile?.last_name || user?.user_metadata?.last_name || "";
 
-  const modules = [
+  const allModules = [
     {
       title: "Classe Virtuelle",
       description: "Cours, QCM, devoirs et collaboration",
@@ -171,6 +171,7 @@ const Dashboard = () => {
       href: "/classe",
       color: "text-primary",
       bgColor: "bg-primary/10",
+      roles: ["ELEVE", "ENSEIGNANT", "ADMIN_ECOLE", "ADMIN_SYSTEME"],
     },
     {
       title: "Suivi Scolaire",
@@ -179,6 +180,7 @@ const Dashboard = () => {
       href: "/suivi",
       color: "text-secondary",
       bgColor: "bg-secondary/10",
+      roles: ["ELEVE", "ENSEIGNANT", "PARENT", "ADMIN_ECOLE", "ADMIN_SYSTEME"],
     },
     {
       title: "Bibliothèque",
@@ -187,6 +189,7 @@ const Dashboard = () => {
       href: "/bibliotheque",
       color: "text-accent",
       bgColor: "bg-accent/10",
+      roles: ["ELEVE", "ENSEIGNANT", "ADMIN_ECOLE", "ADMIN_SYSTEME"],
     },
     {
       title: "Tuteur IA",
@@ -195,8 +198,12 @@ const Dashboard = () => {
       href: "/tuteur-ia",
       color: "text-purple-600",
       bgColor: "bg-purple-100",
+      roles: ["ELEVE"], // Uniquement pour les élèves
     },
   ];
+
+  // Filtrer les modules selon le rôle de l'utilisateur
+  const modules = allModules.filter(module => module.roles.includes(userRole));
 
   return (
     <div className="min-h-screen bg-background">
